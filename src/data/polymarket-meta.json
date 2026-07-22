@@ -1,0 +1,31 @@
+{
+  "slug": "epl-2027-champion-20260701200428749",
+  "title": "EPL: 2027 Champion",
+  "fetchedAt": "2026-07-22T15:46:29.632Z",
+  "source": "https://gamma-api.polymarket.com/events?slug=epl-2027-champion-20260701200428749",
+  "matchedTeams": [
+    "arsenal",
+    "aston-villa",
+    "bournemouth",
+    "brentford",
+    "brighton",
+    "chelsea",
+    "crystal-palace",
+    "everton",
+    "fulham",
+    "leeds",
+    "liverpool",
+    "man-city",
+    "man-united",
+    "newcastle",
+    "nottingham-forest",
+    "tottenham",
+    "sunderland",
+    "coventry",
+    "ipswich",
+    "hull"
+  ],
+  "unmatchedPolymarket": [],
+  "missingTeams": [],
+  "changedTeams": []
+}

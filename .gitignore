@@ -1,0 +1,6 @@
+node_modules/
+dist/
+__pycache__/
+*.tsbuildinfo
+vite.log
+안녕하세요/

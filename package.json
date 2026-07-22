@@ -1,0 +1,17 @@
+{
+  "name": "premier-infinite",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "test": "vitest run",
+    "calibrate": "tsx scripts/calibrate.ts",
+    "calibrate:smoke": "tsx scripts/smoke-calibrate.ts",
+    "calibrate:serve": "tsx scripts/calibrate-server.ts",
+    "market:update": "tsx scripts/update-polymarket.ts"
+  },
+  "dependencies": { "@vitejs/plugin-react": "latest", "vite": "latest", "react": "latest", "react-dom": "latest" },
+  "devDependencies": { "typescript": "latest", "tsx": "latest", "vitest": "latest", "@types/node": "latest", "@types/react": "latest", "@types/react-dom": "latest" }
+}

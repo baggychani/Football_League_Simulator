@@ -1,0 +1,699 @@
+{
+  "schemaVersion": 2,
+  "calibrationMode": "static-baseline",
+  "marketSnapshot": {
+    "arsenal": 0.365,
+    "aston-villa": 0.0165,
+    "bournemouth": 0.0015,
+    "brentford": 0.0015,
+    "brighton": 0.0025,
+    "chelsea": 0.095,
+    "coventry": 0.0015,
+    "crystal-palace": 0.0015,
+    "everton": 0.0015,
+    "fulham": 0.0015,
+    "hull": 0.0015,
+    "ipswich": 0.0015,
+    "leeds": 0.0015,
+    "liverpool": 0.115,
+    "man-city": 0.295,
+    "man-united": 0.115,
+    "newcastle": 0.0055,
+    "nottingham-forest": 0.0015,
+    "sunderland": 0.0015,
+    "tottenham": 0.0275
+  },
+  "normalizedTargets": {
+    "arsenal": 0.3464641670621736,
+    "aston-villa": 0.015662078785002368,
+    "bournemouth": 0.0014238253440911244,
+    "brentford": 0.0014238253440911244,
+    "brighton": 0.002373042240151874,
+    "chelsea": 0.09017560512577122,
+    "coventry": 0.0014238253440911244,
+    "crystal-palace": 0.0014238253440911244,
+    "everton": 0.0014238253440911244,
+    "fulham": 0.0014238253440911244,
+    "hull": 0.0014238253440911244,
+    "ipswich": 0.0014238253440911244,
+    "leeds": 0.0014238253440911244,
+    "liverpool": 0.1091599430469862,
+    "man-city": 0.2800189843379211,
+    "man-united": 0.1091599430469862,
+    "newcastle": 0.005220692928334122,
+    "nottingham-forest": 0.0014238253440911244,
+    "sunderland": 0.0014238253440911244,
+    "tottenham": 0.026103464641670612
+  },
+  "simulatedProbability": {
+    "arsenal": 0.34522682577247427,
+    "aston-villa": 0.01685443818539382,
+    "bournemouth": 0.001144961834605513,
+    "brentford": 0.001181627279090697,
+    "brighton": 0.0022015932802239924,
+    "chelsea": 0.0931085630478984,
+    "coventry": 0.001128295723475884,
+    "crystal-palace": 0.001064964501183294,
+    "everton": 0.0011782940568647712,
+    "fulham": 0.0011949601679944002,
+    "hull": 0.001164961167961068,
+    "ipswich": 0.001164961167961068,
+    "leeds": 0.0012016266124462518,
+    "liverpool": 0.11321455951468284,
+    "man-city": 0.27681910602979903,
+    "man-united": 0.1120979300689977,
+    "newcastle": 0.005068164394520183,
+    "nottingham-forest": 0.0011416286123795874,
+    "sunderland": 0.0011182960567981068,
+    "tottenham": 0.02272424252524916
+  },
+  "probabilityError": {
+    "arsenal": -0.001237341289699323,
+    "aston-villa": 0.001192359400391453,
+    "bournemouth": -0.0002788635094856113,
+    "brentford": -0.00024219806500042746,
+    "brighton": -0.0001714489599278818,
+    "chelsea": 0.00293295792212718,
+    "coventry": -0.0002955296206152403,
+    "crystal-palace": -0.00035886084290783046,
+    "everton": -0.00024553128722635317,
+    "fulham": -0.0002288651760967242,
+    "hull": -0.00025886417613005643,
+    "ipswich": -0.00025886417613005643,
+    "leeds": -0.00022219873164487257,
+    "liverpool": 0.004054616467696642,
+    "man-city": -0.0031998783081220727,
+    "man-united": 0.002937987022011493,
+    "newcastle": -0.0001525285338139391,
+    "nottingham-forest": -0.00028219673171153703,
+    "sunderland": -0.00030552928729301763,
+    "tottenham": -0.0033792221164214535
+  },
+  "probabilityTolerance": {
+    "arsenal": 0.003,
+    "aston-villa": 0.0018794494542002842,
+    "bournemouth": 0.0003559563360227811,
+    "brentford": 0.0003559563360227811,
+    "brighton": 0.0005932605600379686,
+    "chelsea": 0.005,
+    "coventry": 0.0003559563360227811,
+    "crystal-palace": 0.0003559563360227811,
+    "everton": 0.0003559563360227811,
+    "fulham": 0.0003559563360227811,
+    "hull": 0.0003559563360227811,
+    "ipswich": 0.0003559563360227811,
+    "leeds": 0.0003559563360227811,
+    "liverpool": 0.005,
+    "man-city": 0.003,
+    "man-united": 0.005,
+    "newcastle": 0.0013051732320835305,
+    "nottingham-forest": 0.0003559563360227811,
+    "sunderland": 0.0003559563360227811,
+    "tottenham": 0.0031324157570004735
+  },
+  "normalizedResidual": {
+    "arsenal": -0.412447096566441,
+    "aston-villa": 0.634419509248685,
+    "bournemouth": -0.7834205526482443,
+    "brentford": -0.6804150972745344,
+    "brighton": -0.28899436685443763,
+    "chelsea": 0.586591584425436,
+    "coventry": -0.8302412141817487,
+    "crystal-palace": -1.0081597280090653,
+    "everton": -0.689779229581235,
+    "fulham": -0.6429585680477307,
+    "hull": -0.7272357588080387,
+    "ipswich": -0.7272357588080387,
+    "leeds": -0.6242303034343288,
+    "liverpool": 0.8109232935393285,
+    "man-city": -1.0666261027073576,
+    "man-united": 0.5875974044022986,
+    "newcastle": -0.11686458936217084,
+    "nottingham-forest": -0.7927846849549449,
+    "sunderland": -0.8583336111018511,
+    "tottenham": -1.0787910605000008
+  },
+  "standardError": {
+    "arsenal": 0.0008680346854428034,
+    "aston-villa": 0.00023502032606314828,
+    "bournemouth": 0.00006174277007614764,
+    "brentford": 0.00006272243182105335,
+    "brighton": 0.00008557153473853451,
+    "chelsea": 0.000530532306697886,
+    "coventry": 0.0000612922690132089,
+    "crystal-palace": 0.00005954914921851007,
+    "everton": 0.00006263400780141537,
+    "fulham": 0.00006307488243327151,
+    "hull": 0.0000622790503416735,
+    "ipswich": 0.0000622790503416735,
+    "leeds": 0.0000632503677441355,
+    "liverpool": 0.000578495240627438,
+    "man-city": 0.0008168849134908007,
+    "man-united": 0.0005759976392985299,
+    "newcastle": 0.00012964667503372773,
+    "nottingham-forest": 0.00006165293441221279,
+    "sunderland": 0.000061020364653325814,
+    "tottenham": 0.00027207750934187127
+  },
+  "confidenceInterval95": {
+    "arsenal": {
+      "low": 0.3435254777890064,
+      "high": 0.34692817375594215
+    },
+    "aston-villa": {
+      "low": 0.01639379834631005,
+      "high": 0.01731507802447759
+    },
+    "bournemouth": {
+      "low": 0.0010239460052562637,
+      "high": 0.0012659776639547624
+    },
+    "brentford": {
+      "low": 0.0010586913127214324,
+      "high": 0.0013045632454599615
+    },
+    "brighton": {
+      "low": 0.0020338730721364646,
+      "high": 0.00236931348831152
+    },
+    "chelsea": {
+      "low": 0.09206871972677054,
+      "high": 0.09414840636902626
+    },
+    "coventry": {
+      "low": 0.0010081628762099947,
+      "high": 0.0012484285707417735
+    },
+    "crystal-palace": {
+      "low": 0.0009482481687150142,
+      "high": 0.0011816808336515736
+    },
+    "everton": {
+      "low": 0.001055531401573997,
+      "high": 0.0013010567121555453
+    },
+    "fulham": {
+      "low": 0.001071333398425188,
+      "high": 0.0013185869375636123
+    },
+    "hull": {
+      "low": 0.001042894229291388,
+      "high": 0.001287028106630748
+    },
+    "ipswich": {
+      "low": 0.001042894229291388,
+      "high": 0.001287028106630748
+    },
+    "leeds": {
+      "low": 0.0010776558916677462,
+      "high": 0.0013255973332247574
+    },
+    "liverpool": {
+      "low": 0.11208070884305307,
+      "high": 0.11434841018631262
+    },
+    "man-city": {
+      "low": 0.27521801159935705,
+      "high": 0.278420200460241
+    },
+    "man-united": {
+      "low": 0.11096897469597258,
+      "high": 0.1132268854420228
+    },
+    "newcastle": {
+      "low": 0.004814056911454077,
+      "high": 0.005322271877586289
+    },
+    "nottingham-forest": {
+      "low": 0.0010207888609316503,
+      "high": 0.0012624683638275244
+    },
+    "sunderland": {
+      "low": 0.0009986961420775883,
+      "high": 0.0012378959715186252
+    },
+    "tottenham": {
+      "low": 0.02219097060693909,
+      "high": 0.023257514443559228
+    }
+  },
+  "teamDiagnostics": {
+    "arsenal": {
+      "target": 0.3464641670621736,
+      "simulated": 0.34522682577247427,
+      "residual": -0.001237341289699323,
+      "tolerance": 0.003,
+      "normalizedResidual": -0.412447096566441,
+      "standardError": 0.0008680346854428034,
+      "confidenceInterval95": {
+        "low": 0.3435254777890064,
+        "high": 0.34692817375594215
+      },
+      "withinTolerance": true
+    },
+    "aston-villa": {
+      "target": 0.015662078785002368,
+      "simulated": 0.01685443818539382,
+      "residual": 0.001192359400391453,
+      "tolerance": 0.0018794494542002842,
+      "normalizedResidual": 0.634419509248685,
+      "standardError": 0.00023502032606314828,
+      "confidenceInterval95": {
+        "low": 0.01639379834631005,
+        "high": 0.01731507802447759
+      },
+      "withinTolerance": true
+    },
+    "bournemouth": {
+      "target": 0.0014238253440911244,
+      "simulated": 0.001144961834605513,
+      "residual": -0.0002788635094856113,
+      "tolerance": 0.0003559563360227811,
+      "normalizedResidual": -0.7834205526482443,
+      "standardError": 0.00006174277007614764,
+      "confidenceInterval95": {
+        "low": 0.0010239460052562637,
+        "high": 0.0012659776639547624
+      },
+      "withinTolerance": true
+    },
+    "brentford": {
+      "target": 0.0014238253440911244,
+      "simulated": 0.001181627279090697,
+      "residual": -0.00024219806500042746,
+      "tolerance": 0.0003559563360227811,
+      "normalizedResidual": -0.6804150972745344,
+      "standardError": 0.00006272243182105335,
+      "confidenceInterval95": {
+        "low": 0.0010586913127214324,
+        "high": 0.0013045632454599615
+      },
+      "withinTolerance": true
+    },
+    "brighton": {
+      "target": 0.002373042240151874,
+      "simulated": 0.0022015932802239924,
+      "residual": -0.0001714489599278818,
+      "tolerance": 0.0005932605600379686,
+      "normalizedResidual": -0.28899436685443763,
+      "standardError": 0.00008557153473853451,
+      "confidenceInterval95": {
+        "low": 0.0020338730721364646,
+        "high": 0.00236931348831152
+      },
+      "withinTolerance": true
+    },
+    "chelsea": {
+      "target": 0.09017560512577122,
+      "simulated": 0.0931085630478984,
+      "residual": 0.00293295792212718,
+      "tolerance": 0.005,
+      "normalizedResidual": 0.586591584425436,
+      "standardError": 0.000530532306697886,
+      "confidenceInterval95": {
+        "low": 0.09206871972677054,
+        "high": 0.09414840636902626
+      },
+      "withinTolerance": true
+    },
+    "coventry": {
+      "target": 0.0014238253440911244,
+      "simulated": 0.001128295723475884,
+      "residual": -0.0002955296206152403,
+      "tolerance": 0.0003559563360227811,
+      "normalizedResidual": -0.8302412141817487,
+      "standardError": 0.0000612922690132089,
+      "confidenceInterval95": {
+        "low": 0.0010081628762099947,
+        "high": 0.0012484285707417735
+      },
+      "withinTolerance": true
+    },
+    "crystal-palace": {
+      "target": 0.0014238253440911244,
+      "simulated": 0.001064964501183294,
+      "residual": -0.00035886084290783046,
+      "tolerance": 0.0003559563360227811,
+      "normalizedResidual": -1.0081597280090653,
+      "standardError": 0.00005954914921851007,
+      "confidenceInterval95": {
+        "low": 0.0009482481687150142,
+        "high": 0.0011816808336515736
+      },
+      "withinTolerance": false
+    },
+    "everton": {
+      "target": 0.0014238253440911244,
+      "simulated": 0.0011782940568647712,
+      "residual": -0.00024553128722635317,
+      "tolerance": 0.0003559563360227811,
+      "normalizedResidual": -0.689779229581235,
+      "standardError": 0.00006263400780141537,
+      "confidenceInterval95": {
+        "low": 0.001055531401573997,
+        "high": 0.0013010567121555453
+      },
+      "withinTolerance": true
+    },
+    "fulham": {
+      "target": 0.0014238253440911244,
+      "simulated": 0.0011949601679944002,
+      "residual": -0.0002288651760967242,
+      "tolerance": 0.0003559563360227811,
+      "normalizedResidual": -0.6429585680477307,
+      "standardError": 0.00006307488243327151,
+      "confidenceInterval95": {
+        "low": 0.001071333398425188,
+        "high": 0.0013185869375636123
+      },
+      "withinTolerance": true
+    },
+    "hull": {
+      "target": 0.0014238253440911244,
+      "simulated": 0.001164961167961068,
+      "residual": -0.00025886417613005643,
+      "tolerance": 0.0003559563360227811,
+      "normalizedResidual": -0.7272357588080387,
+      "standardError": 0.0000622790503416735,
+      "confidenceInterval95": {
+        "low": 0.001042894229291388,
+        "high": 0.001287028106630748
+      },
+      "withinTolerance": true
+    },
+    "ipswich": {
+      "target": 0.0014238253440911244,
+      "simulated": 0.001164961167961068,
+      "residual": -0.00025886417613005643,
+      "tolerance": 0.0003559563360227811,
+      "normalizedResidual": -0.7272357588080387,
+      "standardError": 0.0000622790503416735,
+      "confidenceInterval95": {
+        "low": 0.001042894229291388,
+        "high": 0.001287028106630748
+      },
+      "withinTolerance": true
+    },
+    "leeds": {
+      "target": 0.0014238253440911244,
+      "simulated": 0.0012016266124462518,
+      "residual": -0.00022219873164487257,
+      "tolerance": 0.0003559563360227811,
+      "normalizedResidual": -0.6242303034343288,
+      "standardError": 0.0000632503677441355,
+      "confidenceInterval95": {
+        "low": 0.0010776558916677462,
+        "high": 0.0013255973332247574
+      },
+      "withinTolerance": true
+    },
+    "liverpool": {
+      "target": 0.1091599430469862,
+      "simulated": 0.11321455951468284,
+      "residual": 0.004054616467696642,
+      "tolerance": 0.005,
+      "normalizedResidual": 0.8109232935393285,
+      "standardError": 0.000578495240627438,
+      "confidenceInterval95": {
+        "low": 0.11208070884305307,
+        "high": 0.11434841018631262
+      },
+      "withinTolerance": true
+    },
+    "man-city": {
+      "target": 0.2800189843379211,
+      "simulated": 0.27681910602979903,
+      "residual": -0.0031998783081220727,
+      "tolerance": 0.003,
+      "normalizedResidual": -1.0666261027073576,
+      "standardError": 0.0008168849134908007,
+      "confidenceInterval95": {
+        "low": 0.27521801159935705,
+        "high": 0.278420200460241
+      },
+      "withinTolerance": false
+    },
+    "man-united": {
+      "target": 0.1091599430469862,
+      "simulated": 0.1120979300689977,
+      "residual": 0.002937987022011493,
+      "tolerance": 0.005,
+      "normalizedResidual": 0.5875974044022986,
+      "standardError": 0.0005759976392985299,
+      "confidenceInterval95": {
+        "low": 0.11096897469597258,
+        "high": 0.1132268854420228
+      },
+      "withinTolerance": true
+    },
+    "newcastle": {
+      "target": 0.005220692928334122,
+      "simulated": 0.005068164394520183,
+      "residual": -0.0001525285338139391,
+      "tolerance": 0.0013051732320835305,
+      "normalizedResidual": -0.11686458936217084,
+      "standardError": 0.00012964667503372773,
+      "confidenceInterval95": {
+        "low": 0.004814056911454077,
+        "high": 0.005322271877586289
+      },
+      "withinTolerance": true
+    },
+    "nottingham-forest": {
+      "target": 0.0014238253440911244,
+      "simulated": 0.0011416286123795874,
+      "residual": -0.00028219673171153703,
+      "tolerance": 0.0003559563360227811,
+      "normalizedResidual": -0.7927846849549449,
+      "standardError": 0.00006165293441221279,
+      "confidenceInterval95": {
+        "low": 0.0010207888609316503,
+        "high": 0.0012624683638275244
+      },
+      "withinTolerance": true
+    },
+    "sunderland": {
+      "target": 0.0014238253440911244,
+      "simulated": 0.0011182960567981068,
+      "residual": -0.00030552928729301763,
+      "tolerance": 0.0003559563360227811,
+      "normalizedResidual": -0.8583336111018511,
+      "standardError": 0.000061020364653325814,
+      "confidenceInterval95": {
+        "low": 0.0009986961420775883,
+        "high": 0.0012378959715186252
+      },
+      "withinTolerance": true
+    },
+    "tottenham": {
+      "target": 0.026103464641670612,
+      "simulated": 0.02272424252524916,
+      "residual": -0.0033792221164214535,
+      "tolerance": 0.0031324157570004735,
+      "normalizedResidual": -1.0787910605000008,
+      "standardError": 0.00027207750934187127,
+      "confidenceInterval95": {
+        "low": 0.02219097060693909,
+        "high": 0.023257514443559228
+      },
+      "withinTolerance": false
+    }
+  },
+  "headDiagnostics": {
+    "teamIds": [
+      "arsenal",
+      "man-city"
+    ],
+    "targetMass": 0.6264831514000947,
+    "simulatedMass": 0.6220459318022733,
+    "massResidual": -0.004437219597821396,
+    "massTolerance": 0.004,
+    "massStandardError": 0.0008852585131484002,
+    "targetConditionalShare": 0.5530303030303031,
+    "simulatedConditionalShare": 0.5549860679455578,
+    "targetLogSplit": 0.21292199724267172,
+    "simulatedLogSplit": 0.22083742096689124,
+    "splitResidual": 0.007915423724219522,
+    "splitTolerance": 0.025,
+    "splitStandardError": 0.004658008763336086,
+    "massWithinTolerance": false,
+    "splitWithinTolerance": true
+  },
+  "scoreModelDiagnostics": {
+    "rawRatingDifference": {
+      "min": -0.3132705788475537,
+      "p50": 0,
+      "p95": 0.29501506301290653,
+      "p99": 0.3132705788475537,
+      "max": 0.3132705788475537
+    },
+    "effectiveRatingDifference": {
+      "min": -0.3115743882329794,
+      "p50": 0,
+      "p95": 0.29359741713672494,
+      "p99": 0.3115743882329794,
+      "max": 0.3115743882329794
+    },
+    "lambdaHome": {
+      "min": 1.1287323916156542,
+      "p50": 1.5413668904686846,
+      "p95": 2.067348836508944,
+      "p99": 2.1048495716796016,
+      "max": 2.1048495716796016
+    },
+    "lambdaAway": {
+      "min": 0.8530775900375482,
+      "p50": 1.1649400354343997,
+      "p95": 1.5624686385508706,
+      "p99": 1.5908110844854904,
+      "max": 1.5908110844854904
+    },
+    "hardClampFixtureRatio": 0,
+    "nearSmoothCapFixtureRatio": 0,
+    "maximumExpectedGoals": 2.1048495716796016
+  },
+  "ratings": {
+    "arsenal": 0.23276079500296792,
+    "man-city": 0.2145052791683207,
+    "liverpool": 0.14660606915393495,
+    "man-united": 0.14660606915393495,
+    "chelsea": 0.13399764592236688,
+    "tottenham": 0.05182990640971244,
+    "aston-villa": 0.0365273344787434,
+    "newcastle": -0.020152214407502977,
+    "brighton": -0.05707326259203421,
+    "bournemouth": -0.08050978384458582,
+    "brentford": -0.08050978384458582,
+    "coventry": -0.08050978384458582,
+    "crystal-palace": -0.08050978384458582,
+    "everton": -0.08050978384458582,
+    "fulham": -0.08050978384458582,
+    "hull": -0.08050978384458582,
+    "ipswich": -0.08050978384458582,
+    "leeds": -0.08050978384458582,
+    "nottingham-forest": -0.08050978384458582,
+    "sunderland": -0.08050978384458582
+  },
+  "evaluatedRatings": {
+    "arsenal": 0.23276079500296792,
+    "man-city": 0.2145052791683207,
+    "liverpool": 0.14660606915393495,
+    "man-united": 0.14660606915393495,
+    "chelsea": 0.13399764592236688,
+    "tottenham": 0.05182990640971244,
+    "aston-villa": 0.0365273344787434,
+    "newcastle": -0.020152214407502977,
+    "brighton": -0.05707326259203421,
+    "bournemouth": -0.08050978384458582,
+    "brentford": -0.08050978384458582,
+    "coventry": -0.08050978384458582,
+    "crystal-palace": -0.08050978384458582,
+    "everton": -0.08050978384458582,
+    "fulham": -0.08050978384458582,
+    "hull": -0.08050978384458582,
+    "ipswich": -0.08050978384458582,
+    "leeds": -0.08050978384458582,
+    "nottingham-forest": -0.08050978384458582,
+    "sunderland": -0.08050978384458582
+  },
+  "bestRatings": {
+    "arsenal": 0.23276079500296792,
+    "man-city": 0.2145052791683207,
+    "liverpool": 0.14660606915393495,
+    "man-united": 0.14660606915393495,
+    "chelsea": 0.13399764592236688,
+    "tottenham": 0.05182990640971244,
+    "aston-villa": 0.0365273344787434,
+    "newcastle": -0.020152214407502977,
+    "brighton": -0.05707326259203421,
+    "bournemouth": -0.08050978384458582,
+    "brentford": -0.08050978384458582,
+    "coventry": -0.08050978384458582,
+    "crystal-palace": -0.08050978384458582,
+    "everton": -0.08050978384458582,
+    "fulham": -0.08050978384458582,
+    "hull": -0.08050978384458582,
+    "ipswich": -0.08050978384458582,
+    "leeds": -0.08050978384458582,
+    "nottingham-forest": -0.08050978384458582,
+    "sunderland": -0.08050978384458582
+  },
+  "numberOfCalibrationSeasons": 300000,
+  "validationSeedBank": [
+    20269723,
+    20269724,
+    20269725,
+    20269726,
+    20269727
+  ],
+  "converged": false,
+  "teamsOutsideTolerance": [
+    "crystal-palace",
+    "man-city",
+    "tottenham"
+  ],
+  "loss": 1.6008650417057138,
+  "teamLoss": 0.27006138937577223,
+  "headMassLoss": 1.2305573599556419,
+  "headSplitLoss": 0.1002462923742996,
+  "mae": 0.0011117920812226583,
+  "maxError": 0.004054616467696642,
+  "weightedMae": 0.0024648413816848506,
+  "bestValidationLoss": 1.0587049987186439,
+  "optimizerDiagnostics": {
+    "acceptedSteps": 5,
+    "rejectedSteps": 3,
+    "jacobianRefreshes": 2,
+    "broydenUpdates": 3,
+    "lastConditionEstimate": 47.86676946355725,
+    "titleProbabilitySensitivity": {
+      "arsenal": 2.7772227772227764,
+      "aston-villa": 0.27972027972027974,
+      "bournemouth": 0.00999000999000999,
+      "brentford": 0.014985014985014984,
+      "brighton": 0.01998001998001998,
+      "chelsea": 1.3686313686313685,
+      "coventry": 0.024975024975024976,
+      "crystal-palace": 0.01998001998001998,
+      "everton": 0.02997002997002997,
+      "fulham": 0.014985014985014984,
+      "hull": 0.02997002997002997,
+      "ipswich": 0.024975024975024976,
+      "leeds": 0.014985014985014984,
+      "liverpool": 1.5634365634365632,
+      "man-city": 2.657342657342658,
+      "man-united": 1.5284715284715276,
+      "newcastle": 0.14485514485514486,
+      "nottingham-forest": 0.014985014985014984,
+      "sunderland": 0.02997002997002997,
+      "tottenham": 0
+    }
+  },
+  "configuration": {
+    "randomSeed": 20260722,
+    "startMode": "hybrid",
+    "iterations": 6,
+    "coarseSeasons": 10000,
+    "normalSeasons": 30000,
+    "jacobianSeasons": 10000,
+    "headSeasons": 100000,
+    "finalSeasons": 200000,
+    "finalMaxSeasons": 300000,
+    "trainingSeedBank": [
+      20261723,
+      20261724,
+      20261725,
+      20261726,
+      20261727
+    ],
+    "validationSeedBank": [
+      20269723,
+      20269724,
+      20269725,
+      20269726,
+      20269727
+    ]
+  },
+  "method": "static CRN Monte Carlo + tolerance-normalized Huber objective + LM/Broyden + Arsenal/Manchester City mass-split polish",
+  "createdAt": "2026-07-22T15:48:35.961Z"
+}
