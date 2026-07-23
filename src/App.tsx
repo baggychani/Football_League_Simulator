@@ -4,10 +4,12 @@ import initialRatings from './data/calibrated-ratings.json';
 import defaultMarket from './data/default-market.json';
 import { normalizeMarketProbabilities } from './calibration/market';
 import { toStrengthIndices } from './simulation/strength-index';
-import type { LeagueRow, SimulationSnapshot } from './domain/types';
+import type { ChampionHistoryPage, LeagueRow, RecordCategory, RecordPage, SeasonArchivePage, SimulationSnapshot } from './domain/types';
 import { LeagueTable } from './components/LeagueTable';
 import { CalibrationLab } from './components/CalibrationLab';
 import { ModelGuide } from './components/ModelGuide';
+import { RecordBookPanel, recordPageLabel, renderChampionEntry, renderRecordPageEntry } from './components/RecordBookPanel';
+import { MatchScoreLine } from './components/MatchScoreLine';
 import './lab.css';
 
 const blankRows: LeagueRow[] = teams.map((team, index) => ({
@@ -29,6 +31,11 @@ const formatSeason = (completedSeasons: number) => {
   const firstYear = 2026 + completedSeasons;
   return `${firstYear}/${String((firstYear + 1) % 100).padStart(2, '0')}`;
 };
+const formatSeasonRound = (completedSeasons: number, round: number) => {
+  const firstYear = 2026 + completedSeasons;
+  const season = `${String(firstYear).slice(-2)}/${String(firstYear + 1).slice(-2)}`;
+  return round > 0 ? `${season} · ${round}R` : season;
+};
 const randomSeed = () => {
   const value = new Uint32Array(1);
   crypto.getRandomValues(value);
@@ -47,7 +54,11 @@ export default function App() {
     totalMatches: 0,
     table: blankRows,
     recent: [],
-    history: [],
+    recentChampions: [],
+    recordPreviews: {},
+    championshipLeaders: [],
+    archiveSeasonCount: 0,
+    recordsVersion: 0,
   });
   const [champion, setChampion] = useState<any>(null);
   const [guide, setGuide] = useState(false);
@@ -55,6 +66,7 @@ export default function App() {
   const [showAllRatings, setShowAllRatings] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [useFixedSeed, setUseFixedSeed] = useState(false);
+  const [historyDialog, setHistoryDialog] = useState<{ target: RecordCategory | 'championHistory' | 'seasonArchive'; title: string; page?: RecordPage | ChampionHistoryPage | SeasonArchivePage } | null>(null);
   const worker = useRef<Worker | null>(null);
 
   useEffect(() => {
@@ -69,11 +81,16 @@ export default function App() {
     const w = new Worker(new URL('./simulation/simulation-worker.ts', import.meta.url), { type: 'module' });
     w.onmessage = ({ data }) => {
       if (data.snapshot) setSnapshot(data.snapshot);
+      if (data.type === 'recordPage' || data.type === 'seasonArchivePage' || data.type === 'championHistoryPage') {
+        setHistoryDialog(current => current ? { ...current, page: data.result } : current);
+      }
       if (data.type === 'champion') {
         setStatus('complete');
         setChampion(data.champion);
-      } else if (data.type === 'snapshot') setStatus('running');
-      else if (data.type === 'reset') setStatus('idle');
+      } else if (data.type === 'snapshot') {
+        // In-flight snapshots must not overwrite an intentional pause.
+        setStatus(current => (current === 'paused' || current === 'complete' ? current : 'running'));
+      } else if (data.type === 'reset') setStatus('idle');
     };
     worker.current = w;
     return () => w.terminate();
@@ -86,13 +103,43 @@ export default function App() {
     setSeed(String(activeSeed));
     worker.current?.postMessage({ type: 'start', selected, seed: activeSeed, speed });
   };
+  const pause = () => {
+    setStatus('paused');
+    worker.current?.postMessage({ type: 'pause' });
+  };
+  const resume = () => {
+    setStatus('running');
+    worker.current?.postMessage({ type: 'resume' });
+  };
   const reset = () => {
     setChampion(null);
     worker.current?.postMessage({ type: 'reset' });
   };
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.code !== 'Space' && event.key !== ' ') return;
+      const target = event.target as HTMLElement | null;
+      if (target) {
+        const tag = target.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable) return;
+      }
+      if (view !== 'sim') return;
+      if (guide || historyDialog || champion) return;
+      if (status === 'running') {
+        event.preventDefault();
+        pause();
+      } else if (status === 'paused') {
+        event.preventDefault();
+        resume();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [status, view, guide, historyDialog, champion]);
+
   const market = useMemo(() => normalizeMarketProbabilities(defaultMarket, teams), []);
   const selectedTeam = teamById[selected];
-  const record = snapshot.records;
   const baseRatings = initialRatings.ratings as Record<string, number>;
   const strengths = snapshot.strengths ?? toStrengthIndices(teams, baseRatings);
   const copyShare = () =>
@@ -106,6 +153,12 @@ export default function App() {
     const actualSpeed = speed === nextSpeed ? 1 : nextSpeed;
     setSpeed(actualSpeed);
     worker.current?.postMessage({ type: 'speed', speed: actualSpeed });
+  };
+  const openHistory = (target: RecordCategory | 'championHistory' | 'seasonArchive', title = recordPageLabel(target)) => {
+    setHistoryDialog({ target, title });
+    if (target === 'championHistory') worker.current?.postMessage({ type: 'getChampionHistoryPage', offset: 0, limit: 20 });
+    else if (target === 'seasonArchive') worker.current?.postMessage({ type: 'getSeasonArchivePage', offset: 0, limit: 20 });
+    else worker.current?.postMessage({ type: 'getRecordPage', category: target, offset: 0, limit: 20 });
   };
 
   if (view === 'lab') {
@@ -193,11 +246,11 @@ export default function App() {
 
           <div className="rail-actions">
             {status === 'running' ? (
-              <button type="button" className="rail-start pause" onClick={() => { setStatus('paused'); worker.current?.postMessage({ type: 'pause' }); }}>
+              <button type="button" className="rail-start pause" onClick={pause}>
                 일시정지
               </button>
             ) : (
-              <button type="button" className="rail-start" onClick={status === 'paused' ? () => { setStatus('running'); worker.current?.postMessage({ type: 'resume' }); } : begin}>
+              <button type="button" className="rail-start" onClick={status === 'paused' ? resume : begin}>
                 {status === 'paused' ? '계속' : '시작'}
               </button>
             )}
@@ -247,117 +300,78 @@ export default function App() {
               <b>{snapshot.totalMatches.toLocaleString()}</b>
             </div>
           </div>
-
-          <section className="rail-block grow">
-            <div className="rail-title">최근 경기</div>
-            <div className="rail-feed">
-              {snapshot.recent.length ? (
-                snapshot.recent
-                  .slice()
-                  .reverse()
-                  .slice(0, 6)
-                  .map((match, index) => (
-                    <p key={index}>
-                      {teamById[match.homeId].name}{' '}
-                      <b>
-                        {match.homeGoals}–{match.awayGoals}
-                      </b>{' '}
-                      {teamById[match.awayId].name}
-                    </p>
-                  ))
-              ) : (
-                <p className="empty">시작 후 표시</p>
-              )}
-            </div>
-          </section>
         </aside>
 
         <main className="sim-main">
+          <aside className="side-insights">
+            <section className="rail-block ratings-block side-card">
+              <div className="rail-title">시장 확률 · 전력</div>
+              <div className="rail-ratings">
+                {visibleRatings.map(team => (
+                    <div className="rail-rating-row" key={team.id}>
+                      <i style={{ background: team.color }}>
+                        <img src={team.crestUrl} alt="" />
+                      </i>
+                      <span className="rating-abbr" title={team.name}>{team.abbr}</span>
+                      <em>{(market[team.id] * 100).toFixed(1)}%</em>
+                      <b className="pos">{strengths[team.id] ?? 50}</b>
+                    </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="ratings-toggle"
+                onClick={() => setShowAllRatings(value => !value)}
+                aria-expanded={showAllRatings}
+              >
+                {showAllRatings ? '상위 8팀만 보기' : `전체 ${teams.length}팀 보기`}
+              </button>
+            </section>
+          </aside>
+
+          <div className="recent-stack">
+            <section className="recent-bento" aria-label="최근 경기">
+              <div className="rail-title">최근 경기 <span>{formatSeasonRound(snapshot.completedSeasons, snapshot.round)}</span></div>
+              <div className="recent-feed">
+                {snapshot.recent.length ? (
+                  snapshot.recent
+                    .slice()
+                    .reverse()
+                    .map((match, index) => (
+                      <p key={`${match.season}-${match.round}-${match.homeId}-${index}`} className="rail-match">
+                        <MatchScoreLine
+                          homeId={match.homeId}
+                          awayId={match.awayId}
+                          homeGoals={match.homeGoals}
+                          awayGoals={match.awayGoals}
+                        />
+                      </p>
+                    ))
+                ) : (
+                  <p className="empty">시작 후 표시</p>
+                )}
+              </div>
+            </section>
+
+            <section className="rail-block championship-block side-card">
+              <div className="rail-title">누적 우승 횟수 <span>{snapshot.completedSeasons}시즌</span></div>
+              <div className="championship-list">
+                {snapshot.championshipLeaders
+                  .map(({ teamId, titles }) => (
+                    <div key={teamId}>
+                      <span>{teamById[teamId].name}</span>
+                      <b>{titles}회</b>
+                    </div>
+                  ))}
+                {snapshot.completedSeasons === 0 && <p className="empty">시뮬레이션 후 표시</p>}
+              </div>
+            </section>
+          </div>
+
           <section className="app-center">
             <LeagueTable rows={snapshot.table} teams={teams} selectedId={selected} />
           </section>
-
-          <div className="sim-side-stack">
-          <aside className="app-rail right">
-          <section className="rail-block ratings-block">
-            <div className="rail-title">
-              시장 확률 · 전력 <span>0–100 · 동적</span>
-            </div>
-            <div className="rail-ratings">
-              {visibleRatings.map(team => (
-                  <div className="rail-rating-row" key={team.id}>
-                    <i style={{ background: team.color }}>
-                      <img src={team.crestUrl} alt="" />
-                    </i>
-                    <span>{team.name}</span>
-                    <em>{(market[team.id] * 100).toFixed(1)}%</em>
-                    <b className="pos">{strengths[team.id] ?? 50}</b>
-                  </div>
-              ))}
-            </div>
-            <button
-              type="button"
-              className="ratings-toggle"
-              onClick={() => setShowAllRatings(value => !value)}
-              aria-expanded={showAllRatings}
-            >
-              {showAllRatings ? '상위 8팀만 보기' : `전체 ${teams.length}팀 보기`}
-            </button>
-          </section>
-
-          <section className="rail-block championship-block">
-            <div className="rail-title">누적 우승 횟수 <span>{snapshot.completedSeasons}시즌</span></div>
-            <div className="championship-list">
-              {Object.entries(snapshot.championships ?? {})
-                .sort(([, a], [, b]) => b - a)
-                .map(([teamId, wins]) => (
-                  <div key={teamId}>
-                    <span>{teamById[teamId].name}</span>
-                    <b>{wins}회</b>
-                  </div>
-                ))}
-              {snapshot.completedSeasons === 0 && <p className="empty">시뮬레이션 후 표시</p>}
-            </div>
-          </section>
-          </aside>
-          <section className="records-card">
-            <div className="records-card-title">
-              <b>시즌 · 기록</b>
-              <span>경기 · 시즌 뉴스</span>
-            </div>
-            <div className="rail-feed compact">
-              {record?.mostGoals && (
-                <p>
-                  <small>{formatSeason(record.mostGoals.season - 1)} · {record.mostGoals.round}R</small>
-                  최다 골{' '}
-                  <b>
-                    {teamById[record.mostGoals.homeId].name} {record.mostGoals.homeGoals}–
-                    {record.mostGoals.awayGoals} {teamById[record.mostGoals.awayId].name}
-                  </b>
-                </p>
-              )}
-              {record?.biggestUpset && (
-                <p>
-                  <small>{formatSeason(record.biggestUpset.season - 1)} · {record.biggestUpset.round}R</small>
-                  최대 이변{' '}
-                  <b>
-                    {teamById[record.biggestUpset.homeId].name} {record.biggestUpset.homeGoals}–
-                    {record.biggestUpset.awayGoals} {teamById[record.biggestUpset.awayId].name}
-                  </b>
-                  <small>역배 승리 확률 {(record.biggestUpset.winnerProbability * 100).toFixed(1)}% · 상대 승리 확률 {(record.biggestUpset.favoriteProbability * 100).toFixed(1)}%</small>
-                </p>
-              )}
-              {snapshot.history.slice(0, 3).map(item => (
-                <p key={item.season}>
-                  {formatSeason(item.season - 1)}{' '}
-                  <b>{teamById[item.championId].name}</b>
-                  <small>선택 {item.selectedPosition}위 · {item.selectedPoints}점</small>
-                </p>
-              ))}
-              {!record?.mostGoals && snapshot.history.length === 0 && <p className="empty">기록 없음</p>}
-            </div>
-          </section>
-          </div>
+          <RecordBookPanel snapshot={snapshot} onOpen={openHistory} />
         </main>
       </div>
 
@@ -398,6 +412,20 @@ export default function App() {
         </div>
       )}
       {guide && <ModelGuide onClose={() => setGuide(false)} />}
+      {historyDialog && <div className="modal history-dialog" role="dialog" aria-modal="true" aria-label={historyDialog.title}>
+        <div>
+          <button className="close" type="button" onClick={() => setHistoryDialog(null)} aria-label="닫기">×</button>
+          <p className="eyebrow">기록 · 역사 아카이브</p><h2>{historyDialog.title}</h2>
+          <p className="history-summary">{historyDialog.page ? `${historyDialog.page.total.toLocaleString()}개 기록` : '기록을 불러오는 중…'}</p>
+          <div className="history-page-list">
+            {historyDialog.page && ('category' in historyDialog.page
+              ? historyDialog.page.entries.map(renderRecordPageEntry)
+              : historyDialog.target === 'championHistory'
+                ? (historyDialog.page as ChampionHistoryPage).entries.map(renderChampionEntry)
+                : (historyDialog.page as SeasonArchivePage).entries.map(entry => <div className="history-page-row" key={entry.season}><div><b>{entry.seasonLabel} · {teamById[entry.championId].name}</b><small>준우승 {teamById[entry.runnerUpId].name} · {entry.totalGoals}골 · 선택 팀 {entry.selectedPosition}위</small></div><em>+{entry.titleMargin}점</em></div>))}
+          </div>
+        </div>
+      </div>}
     </div>
   );
 }

@@ -1,8 +1,7 @@
 import type { RatingMap, Team } from '../domain/types';
 import type { DynamicStrengthState } from './dynamic-strength';
 import { baseRatings, effectiveRatings, noFormRatings } from './dynamic-strength';
-import { outcomeProbability } from './match-probability';
-import { modelParameters } from './score-model';
+import { IndependentPoissonDistribution, modelParameters } from './score-model';
 
 export interface StrengthLayerSnapshot {
   base: number;
@@ -20,8 +19,8 @@ export function neutralExpectedResult(rating: number, opponentRating: number) {
     Math.tanh((modelParameters.ratingEffect * rawDifference) / modelParameters.maxEffectiveDifference);
   const lambdaFor = modelParameters.baseGoalRate * Math.exp(difference);
   const lambdaAgainst = modelParameters.baseGoalRate * Math.exp(-difference);
-  return outcomeProbability(lambdaFor, lambdaAgainst, 'home') +
-    .5 * outcomeProbability(lambdaFor, lambdaAgainst, 'draw');
+  const outcomes = new IndependentPoissonDistribution(lambdaFor, lambdaAgainst).outcomeProbabilities();
+  return outcomes.home + .5 * outcomes.draw;
 }
 
 /** Translation-invariant 0–100 index against every other club on neutral ground. */

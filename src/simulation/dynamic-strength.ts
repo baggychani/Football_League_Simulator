@@ -1,5 +1,5 @@
 import type { Fixture, MatchScore, RatingMap, Team } from '../domain/types';
-import { outcomeProbability } from './match-probability';
+import { IndependentPoissonDistribution, type OutcomeProbabilities } from './score-model';
 
 export const dynamicParameters = {
   tierTwo: .35, rhoSame: .82, rhoBreak: .45, breakRecoveryTier: .18, fMax: .27, beta: .9, resultWeight: .75, scoreWeight: .25,
@@ -25,8 +25,15 @@ export function noFormRatings(state: DynamicStrengthState): RatingMap { return O
 export function effectiveRatings(state: DynamicStrengthState): RatingMap { return Object.fromEntries(Object.entries(state).map(([id,value])=>[id,value.base+value.medium+dynamicParameters.formWeight*value.form])); }
 export function structuralSupport(team: DynamicTeamState) { return clip(team.tier+team.acquired,0,1); }
 
-export function applyDynamicMatch(state: DynamicStrengthState, fixture: Fixture, score: MatchScore) {
-  const home=state[fixture.homeId], away=state[fixture.awayId]; const homeWin=outcomeProbability(score.lambdaHome,score.lambdaAway,'home'); const draw=outcomeProbability(score.lambdaHome,score.lambdaAway,'draw');
+export function applyDynamicMatch(
+  state: DynamicStrengthState,
+  fixture: Fixture,
+  score: MatchScore,
+  precomputedOutcomes?: OutcomeProbabilities,
+) {
+  const home=state[fixture.homeId], away=state[fixture.awayId];
+  const outcomes=precomputedOutcomes ?? new IndependentPoissonDistribution(score.lambdaHome,score.lambdaAway).outcomeProbabilities();
+  const homeWin=outcomes.home, draw=outcomes.draw;
   const homeExpected=homeWin+.5*draw; const homeActual=score.homeGoals===score.awayGoals?.5:score.homeGoals>score.awayGoals?1:0; const outcomeShock=homeActual-homeExpected;
   const expectedMargin=score.lambdaHome-score.lambdaAway; const standardisedMargin=((score.homeGoals-score.awayGoals)-expectedMargin)/Math.sqrt(score.lambdaHome+score.lambdaAway+1e-8);
   const shock=dynamicParameters.resultWeight*outcomeShock+dynamicParameters.scoreWeight*Math.tanh(standardisedMargin/2);
