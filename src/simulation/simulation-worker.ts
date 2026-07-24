@@ -36,6 +36,7 @@ interface PreMatchTeamStrength { base: number; noForm: number; current: number; 
 interface PreMatchStrengths { home: PreMatchTeamStrength; away: PreMatchTeamStrength }
 
 let running = false, paused = false, selected = '', seed = 1, total = 0, completed = 0, season = 1, fixtureIndex = 0, startNext = false, speed = 1;
+let runTimer: ReturnType<typeof setTimeout> | null = null;
 let table: Record<string, TeamSeasonState> = emptyTable(teams.map(team => team.id));
 let currentMatches: PlayedMatch[] = [];
 let rng: RandomGenerator = createRng(1);
@@ -300,6 +301,22 @@ function finishSeason() {
   ctx.postMessage({ type: 'snapshot', snapshot: finalSnapshot });
 }
 
+function cancelScheduledRun() {
+  if (runTimer !== null) {
+    clearTimeout(runTimer);
+    runTimer = null;
+  }
+}
+
+function scheduleRun() {
+  cancelScheduledRun();
+  if (!running || paused) return;
+  runTimer = setTimeout(() => {
+    runTimer = null;
+    run();
+  }, 330 / speed);
+}
+
 function run() {
   if (!running || paused) return;
   if (startNext) { season++; prepareSeason(); startNext = false; }
@@ -318,16 +335,17 @@ function run() {
     total++;
   }
   if (fixtureIndex >= fixtures.length) finishSeason(); else ctx.postMessage({ type: 'snapshot', snapshot: snapshot(round) });
-  if (running) setTimeout(run, 330 / speed);
+  scheduleRun();
 }
 
-function reset() { running = false; paused = false; total = 0; completed = 0; season = 1; fixtureIndex = 0; startNext = false; championHistory = []; seasonArchive = []; recordBook = {}; championships = {}; streaks = createStreaks(); recordsVersion = 0; dynamicState = createDynamicStrength(teams, ratings); prepareSeason(); ctx.postMessage({ type: 'reset', snapshot: snapshot(0) }); }
+function reset() { cancelScheduledRun(); running = false; paused = false; total = 0; completed = 0; season = 1; fixtureIndex = 0; startNext = false; championHistory = []; seasonArchive = []; recordBook = {}; championships = {}; streaks = createStreaks(); recordsVersion = 0; dynamicState = createDynamicStrength(teams, ratings); prepareSeason(); ctx.postMessage({ type: 'reset', snapshot: snapshot(0) }); }
 function page<T>(entries: T[], offset = 0, limit = 20) { return { entries: entries.slice(offset, offset + limit), total: entries.length, offset, limit }; }
+function normalizeSpeed(value: unknown) { const next = Number(value); return Number.isFinite(next) && next > 0 ? Math.min(next, 100) : 1; }
 
 ctx.onmessage = ({ data }) => {
-  if (data.type === 'start') { reset(); selected = data.selected; seed = data.seed >>> 0; speed = data.speed || 1; prepareSeason(); running = true; run(); }
-  if (data.type === 'speed') speed = data.speed || 1;
-  if (data.type === 'pause') paused = true;
+  if (data.type === 'start') { reset(); selected = data.selected; seed = data.seed >>> 0; speed = normalizeSpeed(data.speed); prepareSeason(); running = true; run(); }
+  if (data.type === 'speed') speed = normalizeSpeed(data.speed);
+  if (data.type === 'pause') { paused = true; cancelScheduledRun(); }
   if (data.type === 'resume') { paused = false; run(); }
   if (data.type === 'reset') reset();
   if (data.type === 'getRecordPage') { const category = data.category as RecordCategory; const result: RecordPage = { category, ...page(recordBook[category]?.entries ?? [], data.offset, data.limit) }; ctx.postMessage({ type: 'recordPage', result }); }

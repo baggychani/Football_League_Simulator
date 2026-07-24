@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 import { createServer } from 'node:http';
-import { readFile, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import { createReadStream, existsSync, statSync } from 'node:fs';
 import { extname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { persistMarketSnapshot, updateMarketFromPolymarket } from './market-update-core';
+import { teams } from '../src/data/teams';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const dist = join(root, 'dist');
@@ -45,9 +47,12 @@ function validateCalibrationPayload(value: unknown) {
   if (payload.schemaVersion !== 2) throw new Error('Unsupported calibration schemaVersion.');
   if (payload.calibrationMode !== 'static-baseline') throw new Error('Expected static-baseline calibration mode.');
   if (!payload.ratings || typeof payload.ratings !== 'object') throw new Error('Missing calibrated ratings.');
-  const values = Object.values(payload.ratings as Record<string, unknown>);
-  if (values.length !== 20 || values.some(value => typeof value !== 'number' || !Number.isFinite(value))) {
-    throw new Error('Expected 20 finite calibrated ratings.');
+  const ratings = payload.ratings as Record<string, unknown>;
+  const expectedIds = new Set(teams.map(team => team.id));
+  const keys = Object.keys(ratings);
+  const values = Object.values(ratings);
+  if (keys.length !== expectedIds.size || keys.some(id => !expectedIds.has(id)) || values.some(value => typeof value !== 'number' || !Number.isFinite(value))) {
+    throw new Error(`Expected finite calibrated ratings for exactly ${expectedIds.size} known teams.`);
   }
   if (!payload.teamDiagnostics || typeof payload.teamDiagnostics !== 'object') {
     throw new Error('Missing team calibration diagnostics.');
@@ -73,6 +78,45 @@ const server = createServer(async (req, res) => {
       res.end(JSON.stringify({ ok: true, path: 'src/data/calibrated-ratings.json', stamped: `src/data/${stampedName}` }));
       console.log(`saved ${outputPath}`);
       console.log(`saved ${stampedPath}`);
+      return;
+    }
+
+    if (req.method === 'POST' && url.pathname === '/api/update-market') {
+      const result = await updateMarketFromPolymarket({ write: true });
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({
+        ok: true,
+        persisted: true,
+        market: result.market,
+        target: result.target,
+        meta: result.meta,
+        changedTeams: result.changed,
+      }));
+      console.log(
+        result.changed.length
+          ? `updated market · ${result.changed.length} teams changed`
+          : 'updated market · no price changes',
+      );
+      return;
+    }
+
+    if (req.method === 'POST' && url.pathname === '/api/save-market') {
+      const body = JSON.parse(await readBody(req)) as {
+        market?: Record<string, number>;
+        meta?: Parameters<typeof persistMarketSnapshot>[0]['meta'];
+      };
+      if (!body.market || !body.meta) throw new Error('Expected market and meta payload.');
+      const result = await persistMarketSnapshot({ market: body.market, meta: body.meta });
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({
+        ok: true,
+        persisted: true,
+        market: result.market,
+        target: result.target,
+        meta: result.meta,
+        changedTeams: result.changed,
+      }));
+      console.log('saved market snapshot from client');
       return;
     }
 

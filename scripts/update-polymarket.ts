@@ -1,15 +1,6 @@
-import { readFile, writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import {
-  EPL_CHAMPION_EVENT_SLUG,
-  fetchPolymarketEplChampion,
-  mergeMarketSnapshot,
-} from '../src/calibration/polymarket';
+import { updateMarketFromPolymarket } from './market-update-core';
+import { EPL_CHAMPION_EVENT_SLUG } from '../src/calibration/polymarket';
 
-const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
-const marketPath = resolve(root, 'src/data/default-market.json');
-const metaPath = resolve(root, 'src/data/polymarket-meta.json');
 const dryRun = process.argv.includes('--dry-run');
 
 function arg(name: string, fallback: string) {
@@ -20,32 +11,26 @@ function arg(name: string, fallback: string) {
 }
 
 const slug = arg('--slug', EPL_CHAMPION_EVENT_SLUG);
-const previous = JSON.parse(await readFile(marketPath, 'utf8')) as Record<string, number>;
-const fetched = await fetchPolymarketEplChampion(slug);
-const merged = mergeMarketSnapshot(fetched.prices, previous);
+const result = await updateMarketFromPolymarket({ slug, write: !dryRun });
 
-const changed = Object.keys(merged).filter(id => Math.abs((merged[id] ?? 0) - (previous[id] ?? 0)) > 1e-6);
-const meta = {
-  slug: fetched.slug,
-  title: fetched.title,
-  fetchedAt: fetched.fetchedAt,
-  source: fetched.source,
-  matchedTeams: fetched.matched,
-  unmatchedPolymarket: fetched.unmatchedPolymarket,
-  missingTeams: fetched.missingTeams,
-  changedTeams: changed,
-};
-
-console.log(`Polymarket · ${fetched.title}`);
-console.log(`matched ${fetched.matched.length}/${Object.keys(merged).length} teams`);
-if (fetched.unmatchedPolymarket.length) {
-  console.log(`unmapped on Polymarket: ${fetched.unmatchedPolymarket.join(', ')}`);
+console.log(`Polymarket · ${result.meta.title}`);
+console.log(`matched ${result.meta.matchedTeams.length}/${Object.keys(result.market).length} teams`);
+if (result.meta.unmatchedPolymarket.length) {
+  console.log(`unmapped on Polymarket: ${result.meta.unmatchedPolymarket.join(', ')}`);
 }
-if (fetched.missingTeams.length) {
-  console.log(`kept previous price: ${fetched.missingTeams.join(', ')}`);
+if (result.meta.missingTeams.length) {
+  console.log(`kept previous price: ${result.meta.missingTeams.join(', ')}`);
 }
-if (changed.length) {
-  console.log('updated:', changed.map(id => `${id} ${((previous[id] ?? 0) * 100).toFixed(2)}% → ${(merged[id] * 100).toFixed(2)}%`).join(' · '));
+if (result.changed.length) {
+  console.log(
+    'updated:',
+    result.changed
+      .map(
+        id =>
+          `${id} ${((result.previous[id] ?? 0) * 100).toFixed(2)}% → ${(result.market[id] * 100).toFixed(2)}%`,
+      )
+      .join(' · '),
+  );
 } else {
   console.log('no price changes');
 }
@@ -55,7 +40,5 @@ if (dryRun) {
   process.exit(0);
 }
 
-await writeFile(marketPath, `${JSON.stringify(merged, null, 2)}\n`, 'utf8');
-await writeFile(metaPath, `${JSON.stringify(meta, null, 2)}\n`, 'utf8');
-console.log(`\nwrote ${marketPath}`);
-console.log(`wrote ${metaPath}`);
+console.log(`\nwrote src/data/default-market.json`);
+console.log(`wrote src/data/polymarket-meta.json`);

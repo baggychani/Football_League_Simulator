@@ -5,11 +5,42 @@ import {
   type TeamCalibrationRow,
 } from '../calibration/browser-calibrator';
 import { initialRatings, normalizeMarketProbabilities } from '../calibration/market';
-import { EPL_CHAMPION_EVENT_SLUG } from '../calibration/polymarket';
+import {
+  EPL_CHAMPION_EVENT_SLUG,
+  fetchPolymarketEplChampion,
+  mergeMarketSnapshot,
+  type PolymarketFetchResult,
+} from '../calibration/polymarket';
+import {
+  META_STORAGE_KEY,
+  readStoredMarket,
+  writeStoredMarket,
+  writeStoredRatings,
+} from '../calibration/market-storage';
 import calibratedRatings from '../data/calibrated-ratings.json';
 import rawMarket from '../data/default-market.json';
 import polymarketMeta from '../data/polymarket-meta.json';
 import { teams } from '../data/teams';
+
+type MarketMeta = {
+  slug: string;
+  title: string;
+  fetchedAt: string;
+  source: string;
+  matchedTeams: string[];
+  unmatchedPolymarket: string[];
+  missingTeams: string[];
+  changedTeams: string[];
+};
+
+type MarketUpdateResponse = {
+  ok: boolean;
+  persisted?: boolean;
+  market: Record<string, number>;
+  target: Record<string, number>;
+  meta: MarketMeta;
+  changedTeams: string[];
+};
 
 function pct(value: number, digits = 2) {
   return `${(value * 100).toFixed(digits)}%`;
@@ -31,6 +62,16 @@ function formatFetchedAt(iso: string) {
     }).format(new Date(iso));
   } catch {
     return iso.slice(0, 16).replace('T', ' ');
+  }
+}
+
+function readStoredMeta(): MarketMeta {
+  try {
+    const stored = localStorage.getItem(META_STORAGE_KEY);
+    if (!stored) return polymarketMeta as MarketMeta;
+    return JSON.parse(stored) as MarketMeta;
+  } catch {
+    return polymarketMeta as MarketMeta;
   }
 }
 
@@ -140,6 +181,34 @@ function phaseLabel(progress: CalibrationProgress) {
   return `${progress.iteration}`;
 }
 
+function rowsFromMarket(
+  market: Record<string, number>,
+  target: Record<string, number>,
+  previousRows: TeamCalibrationRow[],
+): TeamCalibrationRow[] {
+  const byId = new Map(previousRows.map(row => [row.id, row]));
+  return [...teams]
+    .map(team => {
+      const previous = byId.get(team.id);
+      const sim = previous?.simulated ?? null;
+      return {
+        id: team.id,
+        name: team.name,
+        color: team.color,
+        crestUrl: team.crestUrl ?? '',
+        market: market[team.id] ?? 0,
+        target: target[team.id],
+        simulated: sim,
+        error: sim === null ? null : sim - target[team.id],
+        tolerance: previous?.tolerance ?? null,
+        standardError: previous?.standardError ?? null,
+        withinTolerance: previous?.withinTolerance ?? null,
+        rating: previous?.rating ?? 0,
+      };
+    })
+    .sort((a, b) => b.target - a.target);
+}
+
 function rowsFromSaved(
   market: Record<string, number>,
   target: Record<string, number>,
@@ -173,18 +242,27 @@ function rowsFromSaved(
     .sort((a, b) => b.target - a.target);
 }
 
-export function CalibrationLab({ onBack }: { onBack?: () => void }) {
-  const market = useMemo(() => {
-    try {
-      const stored = localStorage.getItem('football-simulator.calibration-market');
-      if (!stored) return rawMarket as Record<string, number>;
-      const candidate = JSON.parse(stored) as Record<string, number>;
-      normalizeMarketProbabilities(candidate, teams);
-      return candidate;
-    } catch {
-      return rawMarket as Record<string, number>;
-    }
-  }, []);
+function metaFromFetch(fetched: PolymarketFetchResult, changedTeams: string[]): MarketMeta {
+  return {
+    slug: fetched.slug,
+    title: fetched.title,
+    fetchedAt: fetched.fetchedAt,
+    source: fetched.source,
+    matchedTeams: fetched.matched,
+    unmatchedPolymarket: fetched.unmatchedPolymarket,
+    missingTeams: fetched.missingTeams,
+    changedTeams,
+  };
+}
+
+export function CalibrationLab({
+  onBack,
+  onMarketUpdated,
+}: {
+  onBack?: () => void;
+  onMarketUpdated?: (market: Record<string, number>, ratings?: Record<string, number>) => void;
+}) {
+  const [market, setMarket] = useState<Record<string, number>>(() => readStoredMarket(rawMarket as Record<string, number>));
   const target = useMemo(() => normalizeMarketProbabilities(market, teams), [market]);
   const seedRatings = useMemo(() => {
     const saved = (calibratedRatings as { ratings?: Record<string, number> }).ratings;
@@ -209,27 +287,37 @@ export function CalibrationLab({ onBack }: { onBack?: () => void }) {
         : `저장된 보정 결과 · 허용오차 밖 ${savedOutside}팀`
       : '대기',
     rows: hasSavedResult
-      ? rowsFromSaved(market, target, calibratedRatings)
+      ? rowsFromSaved(readStoredMarket(), normalizeMarketProbabilities(readStoredMarket(), teams), calibratedRatings)
       : [...teams]
-          .map(team => ({
-            id: team.id,
-            name: team.name,
-            color: team.color,
-            crestUrl: team.crestUrl ?? '',
-            market: market[team.id] ?? 0,
-            target: target[team.id],
-            simulated: null,
-            error: null,
-            tolerance: null,
-            standardError: null,
-            withinTolerance: null,
-            rating: seedRatings[team.id] ?? 0,
-          }))
+          .map(team => {
+            const initialMarket = readStoredMarket();
+            const initialTarget = normalizeMarketProbabilities(initialMarket, teams);
+            const saved = (calibratedRatings as { ratings?: Record<string, number> }).ratings;
+            const ratings = saved && Object.keys(saved).length === teams.length ? saved : initialRatings(initialTarget);
+            return {
+              id: team.id,
+              name: team.name,
+              color: team.color,
+              crestUrl: team.crestUrl ?? '',
+              market: initialMarket[team.id] ?? 0,
+              target: initialTarget[team.id],
+              simulated: null,
+              error: null,
+              tolerance: null,
+              standardError: null,
+              withinTolerance: null,
+              rating: ratings[team.id] ?? 0,
+            };
+          })
           .sort((a, b) => b.target - a.target),
   }));
   const [busy, setBusy] = useState(false);
+  const [marketBusy, setMarketBusy] = useState(false);
   const [hasResult, setHasResult] = useState(hasSavedResult);
   const [saveState, setSaveState] = useState('');
+  const [marketMeta, setMarketMeta] = useState<MarketMeta>(readStoredMeta);
+  const [marketFlash, setMarketFlash] = useState(false);
+  const [marketStatus, setMarketStatus] = useState('');
   const abortRef = useRef<AbortController | null>(null);
   const resultRef = useRef<Record<string, unknown> | null>(null);
 
@@ -242,8 +330,95 @@ export function CalibrationLab({ onBack }: { onBack?: () => void }) {
     return Math.min(92, 8 + (progress.iteration % 40) * 2);
   }, [progress]);
 
-  const marketFetchedLabel = formatFetchedAt(polymarketMeta.fetchedAt);
-  const polymarketUrl = `https://polymarket.com/event/${EPL_CHAMPION_EVENT_SLUG}`;
+  const marketFetchedLabel = formatFetchedAt(marketMeta.fetchedAt);
+  const polymarketUrl = `https://polymarket.com/event/${marketMeta.slug || EPL_CHAMPION_EVENT_SLUG}`;
+
+  const applyMarketUpdate = (next: MarketUpdateResponse) => {
+    writeStoredMarket(next.market);
+    localStorage.setItem(META_STORAGE_KEY, JSON.stringify(next.meta));
+    setMarket(next.market);
+    setMarketMeta(next.meta);
+    setProgress(previous => ({
+      ...previous,
+      rows: rowsFromMarket(next.market, next.target, previous.rows),
+      message:
+        previous.phase === 'done'
+          ? next.changedTeams.length
+            ? `시장 갱신 · ${next.changedTeams.length}팀 변경 · 재보정 권장`
+            : '시장 갱신 · 가격 변동 없음'
+          : previous.message,
+    }));
+    setMarketFlash(true);
+    window.setTimeout(() => setMarketFlash(false), 1200);
+    const stamp = formatFetchedAt(next.meta.fetchedAt);
+    if (next.changedTeams.length) {
+      setMarketStatus(`${next.changedTeams.length}팀 변경 · ${stamp} KST`);
+    } else {
+      setMarketStatus(`변동 없음 · ${stamp} KST`);
+    }
+    if (!next.persisted) {
+      setMarketStatus(previous => `${previous} · 로컬만 반영`);
+    }
+    onMarketUpdated?.(next.market);
+  };
+
+  const updateMarketClientSide = async (): Promise<MarketUpdateResponse> => {
+    const fetched = await fetchPolymarketEplChampion();
+    const merged = mergeMarketSnapshot(fetched.prices, market);
+    const nextTarget = normalizeMarketProbabilities(merged, teams);
+    const changedTeams = Object.keys(merged).filter(
+      id => Math.abs((merged[id] ?? 0) - (market[id] ?? 0)) > 1e-6,
+    );
+    const meta = metaFromFetch(fetched, changedTeams);
+    let persisted = false;
+    try {
+      const response = await fetch('/api/save-market', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ market: merged, meta }),
+      });
+      if (response.ok) {
+        persisted = true;
+        const payload = (await response.json()) as MarketUpdateResponse;
+        return { ...payload, persisted: true };
+      }
+    } catch {
+      // Fall through to local-only update.
+    }
+    return {
+      ok: true,
+      persisted,
+      market: merged,
+      target: nextTarget,
+      meta,
+      changedTeams,
+    };
+  };
+
+  const updateMarket = async () => {
+    if (marketBusy || busy) return;
+    setMarketBusy(true);
+    setMarketStatus('Polymarket에서 불러오는 중…');
+    try {
+      const response = await fetch('/api/update-market', { method: 'POST' });
+      if (response.ok) {
+        const payload = (await response.json()) as MarketUpdateResponse;
+        applyMarketUpdate(payload);
+        return;
+      }
+      const fallback = await updateMarketClientSide();
+      applyMarketUpdate(fallback);
+    } catch (error) {
+      try {
+        const fallback = await updateMarketClientSide();
+        applyMarketUpdate(fallback);
+      } catch (fallbackError) {
+        setMarketStatus((fallbackError as Error).message || (error as Error).message);
+      }
+    } finally {
+      setMarketBusy(false);
+    }
+  };
 
   const start = async () => {
     if (busy) return;
@@ -273,6 +448,12 @@ export function CalibrationLab({ onBack }: { onBack?: () => void }) {
       });
       resultRef.current = payload;
       setHasResult(true);
+      const payloadRatings = (payload.ratings ?? {}) as Record<string, number>;
+      if (Object.keys(payloadRatings).length === teams.length) {
+        writeStoredRatings(payloadRatings);
+        writeStoredMarket(market);
+        onMarketUpdated?.(market, payloadRatings);
+      }
       try {
         const response = await fetch('/api/save-calibration', {
           method: 'POST',
@@ -341,9 +522,10 @@ export function CalibrationLab({ onBack }: { onBack?: () => void }) {
           <strong>{phaseLabel(progress)}</strong>
           <p>{progress.message}</p>
         </div>
-        <div className="lab-market-meta">
+        <div className={`lab-market-meta${marketFlash ? ' is-flash' : ''}`}>
           <span className="lab-phase-label">Polymarket</span>
           <p className="lab-market-date">{marketFetchedLabel} KST</p>
+          {marketStatus && <p className="lab-market-status">{marketStatus}</p>}
         </div>
         <div className="lab-rail-metrics">
           <div><span>MAE</span><b>{progress.mae === null ? '—' : `${(progress.mae * 100).toFixed(3)}pp`}</b></div>
@@ -376,17 +558,37 @@ export function CalibrationLab({ onBack }: { onBack?: () => void }) {
               <span className="warn"><i aria-hidden />주의 · 허용오차 근처</span>
               <span className="bad"><i aria-hidden />초과 · 허용오차 범위 밖</span>
             </div>
-            <a
-              className="lab-market-link"
-              href={polymarketUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <span>Polymarket</span>
-              <svg viewBox="0 0 16 16" aria-hidden>
-                <path d="M5 3h8v8M13 3 6 10M13 3H9M13 3v4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </a>
+            <div className="lab-market-actions">
+              <button
+                type="button"
+                className={`lab-market-chip${marketBusy ? ' is-busy' : ''}`}
+                onClick={updateMarket}
+                disabled={marketBusy || busy}
+              >
+                <svg viewBox="0 0 16 16" aria-hidden>
+                  <path
+                    d="M3.2 8a4.8 4.8 0 0 1 8.3-3.2M12.8 8a4.8 4.8 0 0 1-8.3 3.2"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
+                  <path d="M11.2 2.6v2.7H8.5M4.8 13.4v-2.7h2.7" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span>{marketBusy ? '갱신 중' : '업데이트'}</span>
+              </button>
+              <a
+                className="lab-market-link"
+                href={polymarketUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span>Polymarket</span>
+                <svg viewBox="0 0 16 16" aria-hidden>
+                  <path d="M5 3h8v8M13 3 6 10M13 3H9M13 3v4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </a>
+            </div>
           </div>
         </div>
       </main>

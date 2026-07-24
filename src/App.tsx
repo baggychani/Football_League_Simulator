@@ -3,6 +3,7 @@ import { teams, teamById } from './data/teams';
 import initialRatings from './data/calibrated-ratings.json';
 import defaultMarket from './data/default-market.json';
 import { normalizeMarketProbabilities } from './calibration/market';
+import { readStoredMarket, readStoredRatings } from './calibration/market-storage';
 import { toStrengthIndices } from './simulation/strength-index';
 import type { ChampionHistoryPage, LeagueRow, RecordCategory, RecordPage, SeasonArchivePage, SimulationSnapshot } from './domain/types';
 import { LeagueTable } from './components/LeagueTable';
@@ -67,7 +68,23 @@ export default function App() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [useFixedSeed, setUseFixedSeed] = useState(false);
   const [historyDialog, setHistoryDialog] = useState<{ target: RecordCategory | 'championHistory' | 'seasonArchive'; title: string; page?: RecordPage | ChampionHistoryPage | SeasonArchivePage } | null>(null);
+  const [marketRaw, setMarketRaw] = useState(() => readStoredMarket(defaultMarket as Record<string, number>));
+  const [baseRatings, setBaseRatings] = useState(() =>
+    readStoredRatings((initialRatings.ratings as Record<string, number>) ?? {}),
+  );
   const worker = useRef<Worker | null>(null);
+
+  const syncMarketFromStorage = (
+    nextMarket?: Record<string, number>,
+    nextRatings?: Record<string, number>,
+  ) => {
+    setMarketRaw(nextMarket ?? readStoredMarket(defaultMarket as Record<string, number>));
+    if (nextRatings) {
+      setBaseRatings(nextRatings);
+      return;
+    }
+    setBaseRatings(readStoredRatings((initialRatings.ratings as Record<string, number>) ?? {}));
+  };
 
   useEffect(() => {
     const query = new URLSearchParams(location.search);
@@ -119,6 +136,7 @@ export default function App() {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.code !== 'Space' && event.key !== ' ') return;
+      if (event.repeat) return;
       const target = event.target as HTMLElement | null;
       if (target) {
         const tag = target.tagName;
@@ -132,15 +150,17 @@ export default function App() {
       } else if (status === 'paused') {
         event.preventDefault();
         resume();
+      } else if (status === 'idle') {
+        event.preventDefault();
+        begin();
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [status, view, guide, historyDialog, champion]);
+  }, [status, view, guide, historyDialog, champion, selected, seed, speed, useFixedSeed]);
 
-  const market = useMemo(() => normalizeMarketProbabilities(defaultMarket, teams), []);
+  const market = useMemo(() => normalizeMarketProbabilities(marketRaw, teams), [marketRaw]);
   const selectedTeam = teamById[selected];
-  const baseRatings = initialRatings.ratings as Record<string, number>;
   const strengths = snapshot.strengths ?? toStrengthIndices(teams, baseRatings);
   const copyShare = () =>
     navigator.clipboard.writeText(`${location.origin}${location.pathname}?team=${selected}&seed=${seed}`);
@@ -165,10 +185,14 @@ export default function App() {
     return (
       <CalibrationLab
         onBack={() => {
+          syncMarketFromStorage();
           setView('sim');
           const url = new URL(location.href);
           url.searchParams.delete('view');
           history.replaceState(null, '', url);
+        }}
+        onMarketUpdated={(nextMarket, nextRatings) => {
+          syncMarketFromStorage(nextMarket, nextRatings);
         }}
       />
     );
