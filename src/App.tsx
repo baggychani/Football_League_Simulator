@@ -59,10 +59,7 @@ const speedOptions = [...new Set([2, 5, 10, roundsPerSeason])];
 const formatSeason = (seasonNumber: number) =>
   formatCompetitionSeason(activeLeague.competition, seasonNumber);
 const formatSeasonRound = (seasonNumber: number, round: number) => {
-  const season = formatSeason(seasonNumber)
-    .split('/')
-    .map(part => part.slice(-2))
-    .join('/');
+  const season = formatSeason(seasonNumber);
   return round > 0 ? `${season} · ${round}R` : season;
 };
 const randomSeed = () => {

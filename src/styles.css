@@ -239,6 +239,7 @@ button{cursor:pointer;color:inherit}
   overflow:hidden;
   text-overflow:ellipsis;
 }
+.standings-row .club-name-short{display:none}
 .standings-row .qualification-badge{
   flex:0 0 auto;
   font-size:11px;
@@ -2089,4 +2090,153 @@ body{min-width:0}
 
 @media(prefers-reduced-motion:reduce){
   .strength-pulse-head span i{animation:none}
+}
+
+/*
+ * Laptop compaction.
+ * The current wide-desktop composition remains untouched above 1500px.
+ */
+.app-center{
+  container-type:inline-size;
+  container-name:league-table;
+}
+
+@media(max-width:1700px){
+  .app-layout{
+    grid-template-columns:clamp(215px,14vw,230px) minmax(0,1fr);
+  }
+  .app-rail.left{
+    gap:13px;
+    padding:17px 14px;
+  }
+  .app-rail.left h1{font-size:26px}
+  .app-rail.left .sim-brand{font-size:21px}
+  .app-rail.left .sim-brand span{font-size:26px}
+  .sim-main{
+    padding:12px 22px;
+  }
+}
+
+@media(max-width:1500px){
+  .app-layout{
+    grid-template-columns:clamp(205px,15vw,220px) minmax(0,1fr);
+  }
+  .app-rail.left{
+    gap:12px;
+    padding:15px 12px;
+  }
+  .app-rail.left h1{font-size:25px}
+  .app-rail.left .sim-brand{font-size:20px}
+  .app-rail.left .sim-brand span{font-size:25px}
+  .app-rail.left .rail-field select,
+  .app-rail.left .rail-field input{
+    padding:9px;
+    font-size:13px;
+  }
+  .app-rail.left .rail-actions .rail-start{
+    min-height:48px;
+    font-size:15px;
+  }
+  .app-rail.left .rail-stats{gap:6px}
+  .app-rail.left .rail-stats div{padding-bottom:6px}
+  .sim-main{padding:12px 20px}
+}
+
+@media(max-width:1320px){
+  .app-layout{
+    grid-template-columns:clamp(184px,15vw,198px) minmax(0,1fr);
+  }
+  .app-rail.left{
+    gap:9px;
+    padding:12px 10px;
+  }
+  .app-rail.left h1{font-size:22px}
+  .app-rail.left .sim-brand{font-size:18px}
+  .app-rail.left .sim-brand span{font-size:23px}
+  .app-rail.left .rail-kicker{font-size:10px}
+  .app-rail.left .rail-field{gap:4px;margin-top:2px}
+  .app-rail.left .rail-field span,
+  .app-rail.left .speed-control>span{font-size:11px}
+  .app-rail.left .rail-field select,
+  .app-rail.left .rail-field input{
+    padding:7px 8px;
+    font-size:12px;
+  }
+  .app-rail.left .advanced-toggle{
+    min-height:28px;
+    padding:4px 0;
+    font-size:11px;
+  }
+  .app-rail.left .advanced-toggle span{font-size:10px}
+  .app-rail.left .rail-actions{gap:6px}
+  .app-rail.left .rail-actions .rail-start{
+    min-height:44px;
+    font-size:14px;
+  }
+  .app-rail.left .rail-actions .ghost{min-height:30px}
+  .app-rail.left .speed-control{gap:5px}
+  .app-rail.left .speed-control>div{gap:4px}
+  .app-rail.left .speed-control button{
+    min-height:27px;
+    font-size:10px;
+  }
+  .app-rail.left .rail-stats{gap:5px}
+  .app-rail.left .rail-stats div{
+    padding-bottom:5px;
+    font-size:11px;
+  }
+  .app-rail.left .rail-stats b{font-size:12px}
+  .app-rail.left .rail-bottom{gap:8px}
+  .app-rail.left .rail-market{font-size:10px}
+  .app-rail.left .rail-credit{padding-top:9px;font-size:9px}
+  .sim-main{
+    grid-template-columns:minmax(180px,205px) minmax(390px,1.04fr) minmax(330px,1fr);
+    gap:8px;
+    padding:10px 18px;
+  }
+  .recent-bento,
+  .recent-stack .movement-block,
+  .recent-stack .championship-block{
+    padding:12px!important;
+  }
+  .recent-feed .match-score-line{
+    grid-template-columns:15px 34px 46px 34px 15px;
+    column-gap:4px;
+  }
+  .recent-feed .team-abbr{
+    width:34px;
+    font-size:11px;
+  }
+  .recent-feed .match-crest{width:15px;height:15px}
+}
+
+@container league-table (max-width:580px){
+  .standings-head,
+  .standings-row{
+    grid-template-columns:20px minmax(84px,1fr) 31px 28px 28px 28px 32px 32px 36px 38px;
+    gap:2px;
+    padding:0 6px;
+  }
+  .standings-row .club{gap:6px}
+  .standings-row .club-name-full{display:none}
+  .standings-row .club-name-short{
+    display:inline;
+    font-weight:700;
+    letter-spacing:.02em;
+  }
+  .standings-row .qualification-badge{font-size:10px}
+}
+
+@container league-table (max-width:445px){
+  .standings-head,
+  .standings-row{
+    grid-template-columns:19px minmax(72px,1fr) 29px 26px 26px 26px 30px 30px 33px 35px;
+    gap:2px;
+    padding:0 5px;
+  }
+  .standings-head{font-size:10px}
+  .standings-row{font-size:12px}
+  .standings-row .club{gap:5px}
+  .standings-row .club i{width:16px;height:16px}
+  .standings-row .qualification-badge{font-size:9px}
 }

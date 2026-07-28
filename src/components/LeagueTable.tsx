@@ -84,7 +84,10 @@ export function LeagueTable({
                   }}
                 />
               </i>
-              <span className="club-name">{team.nameKo ?? team.name}</span>
+              <span className="club-name club-name-full">{team.nameKo ?? team.name}</span>
+              <span className="club-name club-name-short" title={team.nameKo ?? team.name}>
+                {team.abbr}
+              </span>
               {qualification ? (
                 <small className={`qualification-badge qualification-${qualification}`}>
                   {qualificationLabel[qualification]}
