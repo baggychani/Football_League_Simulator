@@ -41,7 +41,7 @@ export function calibrationPayload(
     optimizerDiagnostics: report.optimizer,
     configuration,
     method:
-      'static CRN Monte Carlo + tolerance-normalized Huber objective + LM/Broyden + Arsenal/Manchester City mass-split polish',
+      'static CRN Monte Carlo + tolerance-normalized Huber objective + LM/Broyden + market-leading-pair mass-split polish',
     createdAt: new Date().toISOString(),
   };
 }

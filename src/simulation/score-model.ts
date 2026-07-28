@@ -1,6 +1,7 @@
 import type { MatchScore, RatingMap, Team } from '../domain/types';
 import type { RandomGenerator } from './rng';
 import { poisson, poissonFromUniform } from './poisson';
+import type { MatchContext } from './match-context';
 
 export const SCORE_TAIL_TOLERANCE = 1e-12;
 export const INDEPENDENT_POISSON_MODEL_VERSION = 'independent-poisson-v2';
@@ -43,15 +44,16 @@ export interface ScoreDistribution {
 }
 
 export interface ScoreModel {
-  simulateScore(home: Team, away: Team, ratings: RatingMap, rng: RandomGenerator): MatchScore;
+  simulateScore(home: Team, away: Team, ratings: RatingMap, rng: RandomGenerator, context?: MatchContext): MatchScore;
   distribution(lambdaHome: number, lambdaAway: number): ScoreDistribution;
-  expectedScore?(home: Team, away: Team, ratings: RatingMap): ScoreExpectation;
+  expectedScore?(home: Team, away: Team, ratings: RatingMap, context?: MatchContext): ScoreExpectation;
   simulateScoreFromUniforms?(
     home: Team,
     away: Team,
     ratings: RatingMap,
     homeUniform: number,
     awayUniform: number,
+    context?: MatchContext,
   ): MatchScore;
 }
 
@@ -195,24 +197,36 @@ export class IndependentPoissonModel implements ScoreModel {
     return new IndependentPoissonDistribution(lambdaHome, lambdaAway);
   }
 
-  expectedScore(home: Team, away: Team, ratings: RatingMap): ScoreExpectation {
+  expectedScore(home: Team, away: Team, ratings: RatingMap, context?: MatchContext): ScoreExpectation {
+    const homeContext = context?.home;
+    const awayContext = context?.away;
+    const homeAdjustment =
+      (homeContext?.effortShift ?? 0)
+      + (homeContext?.performanceShift ?? 0)
+      - (homeContext?.fatigueShift ?? 0);
+    const awayAdjustment =
+      (awayContext?.effortShift ?? 0)
+      + (awayContext?.performanceShift ?? 0)
+      - (awayContext?.fatigueShift ?? 0);
     const rawDifference =
-      (ratings[home.id] ?? 0) -
-      (ratings[away.id] ?? 0);
+      (ratings[home.id] ?? 0) + homeAdjustment
+      - (ratings[away.id] ?? 0) - awayAdjustment;
     const effectiveDifference =
       modelParameters.maxEffectiveDifference *
       Math.tanh((modelParameters.ratingEffect * rawDifference) / modelParameters.maxEffectiveDifference);
+    const tempoShift = context?.tempoShift ?? 0;
+    const homeAdvantage = context?.homeAdvantage ?? modelParameters.homeAdvantage;
     const lambdaHome = Math.exp(
-      Math.log(modelParameters.baseGoalRate) + modelParameters.homeAdvantage + effectiveDifference,
+      Math.log(modelParameters.baseGoalRate) + homeAdvantage + effectiveDifference + tempoShift,
     );
     const lambdaAway = Math.exp(
-      Math.log(modelParameters.baseGoalRate) - modelParameters.homeAdvantage - effectiveDifference,
+      Math.log(modelParameters.baseGoalRate) - homeAdvantage - effectiveDifference + tempoShift,
     );
     return { rawDifference, effectiveDifference, lambdaHome, lambdaAway };
   }
 
-  simulateScore(home: Team, away: Team, ratings: RatingMap, rng: RandomGenerator): MatchScore {
-    const { lambdaHome, lambdaAway } = this.expectedScore(home, away, ratings);
+  simulateScore(home: Team, away: Team, ratings: RatingMap, rng: RandomGenerator, context?: MatchContext): MatchScore {
+    const { lambdaHome, lambdaAway } = this.expectedScore(home, away, ratings, context);
     return { lambdaHome, lambdaAway, homeGoals: poisson(lambdaHome, rng), awayGoals: poisson(lambdaAway, rng) };
   }
 
@@ -222,8 +236,9 @@ export class IndependentPoissonModel implements ScoreModel {
     ratings: RatingMap,
     homeUniform: number,
     awayUniform: number,
+    context?: MatchContext,
   ): MatchScore {
-    const { lambdaHome, lambdaAway } = this.expectedScore(home, away, ratings);
+    const { lambdaHome, lambdaAway } = this.expectedScore(home, away, ratings, context);
     return {
       lambdaHome,
       lambdaAway,

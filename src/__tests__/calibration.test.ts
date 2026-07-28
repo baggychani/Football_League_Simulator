@@ -95,6 +95,95 @@ describe('calibration v2', () => {
     expect(fast(ratings, 991, 7)).toBe(full.championId);
   });
 
+  it('uses the selected league tie-breakers in allocation-light calibration seasons', () => {
+    const clubs = ['a', 'b', 'c', 'd'].map(id => ({
+      id,
+      name: id,
+      abbr: id.toUpperCase(),
+      color: '#111111',
+      secondaryColor: '#FFFFFF',
+    }));
+    const fixtures = [
+      { homeId: 'a', awayId: 'b', round: 1 },
+      { homeId: 'd', awayId: 'a', round: 2 },
+      { homeId: 'a', awayId: 'c', round: 3 },
+      { homeId: 'b', awayId: 'c', round: 4 },
+      { homeId: 'b', awayId: 'd', round: 5 },
+      { homeId: 'c', awayId: 'd', round: 6 },
+    ];
+    const scores: Record<string, readonly [number, number]> = {
+      'a:b': [1, 0],
+      'd:a': [1, 0],
+      'a:c': [1, 0],
+      'b:c': [10, 0],
+      'b:d': [10, 0],
+      'c:d': [0, 0],
+    };
+    const model = new IndependentPoissonModel();
+    model.simulateScoreFromUniforms = (home, away) => {
+      const [homeGoals, awayGoals] = scores[`${home.id}:${away.id}`];
+      return { homeGoals, awayGoals, lambdaHome: 0, lambdaAway: 0 };
+    };
+    const ratings = Object.fromEntries(clubs.map(club => [club.id, 0]));
+    const byGoalDifference = createStaticChampionSimulator(
+      clubs,
+      fixtures,
+      model,
+      { tieBreakers: ['goalDifference', 'goalsFor'] },
+    );
+    const byHeadToHead = createStaticChampionSimulator(
+      clubs,
+      fixtures,
+      model,
+      { tieBreakers: ['headToHeadPoints', 'goalDifference'] },
+    );
+    expect(byGoalDifference(ratings, 1, 1)).toBe('b');
+    expect(byHeadToHead(ratings, 1, 1)).toBe('a');
+  });
+
+  it('resolves a decisive title playoff with team-id keyed ratings', () => {
+    const clubs = ['a', 'b', 'c', 'd'].map(id => ({
+      id,
+      name: id,
+      abbr: id.toUpperCase(),
+      color: '#111111',
+      secondaryColor: '#FFFFFF',
+    }));
+    const fixtures = createDoubleRoundRobin(clubs.map(team => team.id));
+    const model = new IndependentPoissonModel();
+    model.simulateScoreFromUniforms = () => ({
+      homeGoals: 0,
+      awayGoals: 0,
+      lambdaHome: 1,
+      lambdaAway: 1,
+    });
+    const ratings = { a: .2, b: .1, c: 0, d: -.1 };
+    const rules = {
+      tieBreakers: ['goalDifference', 'goalsFor', 'wins'] as const,
+      decisivePlayoffs: [{
+        positions: [1, 2] as const,
+        purpose: 'title' as const,
+        format: 'single-match' as const,
+        trigger: 'points-tied' as const,
+      }],
+    };
+
+    expect(() =>
+      createStaticChampionSimulator(clubs, fixtures, model, rules)(
+        ratings,
+        991,
+        7,
+      )
+    ).not.toThrow();
+    expect(() =>
+      createDynamicChampionSimulator(clubs, fixtures, model, rules)(
+        ratings,
+        991,
+        7,
+      )
+    ).not.toThrow();
+  });
+
   it('resets dynamic calibration state for each deterministic first-season sample', () => {
     const clubs = teams.slice(0, 6);
     const fixtures = createDoubleRoundRobin(clubs.map(team => team.id));

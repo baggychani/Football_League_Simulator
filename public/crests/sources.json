@@ -1,0 +1,970 @@
+{
+  "accrington": {
+    "clubId": "accrington",
+    "wikidataId": "Q48843",
+    "article": "https://en.wikipedia.org/wiki/Accrington_Stanley_F.C.",
+    "file": "File:Accrington Stanley F.C. logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Accrington_Stanley_F.C._logo.svg",
+    "fetchedAt": "2026-07-28T09:57:09.290Z"
+  },
+  "afc-wimbledon": {
+    "clubId": "afc-wimbledon",
+    "wikidataId": "Q48851",
+    "article": "https://en.wikipedia.org/wiki/AFC_Wimbledon",
+    "file": "File:AFC Wimbledon (2020) logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:AFC_Wimbledon_(2020)_logo.svg",
+    "fetchedAt": "2026-07-28T10:04:36.792Z"
+  },
+  "aguilas": {
+    "clubId": "aguilas",
+    "wikidataId": "Q9098124",
+    "article": "https://en.wikipedia.org/wiki/%C3%81guilas_FC",
+    "file": "File:Águilas FC logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:%C3%81guilas_FC_logo.svg",
+    "fetchedAt": "2026-07-28T10:18:09.442Z"
+  },
+  "alcione-milano": {
+    "clubId": "alcione-milano",
+    "wikidataId": "Q120881664",
+    "article": "https://en.wikipedia.org/wiki/Alcione_Milano",
+    "file": "File:Alcione Milano crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Alcione_Milano_crest.svg",
+    "fetchedAt": "2026-07-28T10:34:09.787Z"
+  },
+  "algeciras": {
+    "clubId": "algeciras",
+    "wikidataId": "Q646281",
+    "article": "https://en.wikipedia.org/wiki/Algeciras_CF",
+    "file": "File:Algeciras CF logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Algeciras_CF_logo.svg",
+    "fetchedAt": "2026-07-28T10:18:14.466Z"
+  },
+  "andorra": {
+    "clubId": "andorra",
+    "wikidataId": "Q1386854",
+    "article": "https://en.wikipedia.org/wiki/FC_Andorra",
+    "file": "File:Logo FC Andorra - 2021.svg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Logo_FC_Andorra_-_2021.svg",
+    "fetchedAt": "2026-07-28T11:23:13.645Z"
+  },
+  "arenas-club": {
+    "clubId": "arenas-club",
+    "wikidataId": "Q641649",
+    "article": "https://en.wikipedia.org/wiki/Arenas_Club_de_Getxo",
+    "file": "File:Arenas Club de Getxo logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Arenas_Club_de_Getxo_logo.svg",
+    "fetchedAt": "2026-07-28T10:11:09.172Z"
+  },
+  "arezzo": {
+    "clubId": "arezzo",
+    "wikidataId": "Q297430",
+    "article": "https://en.wikipedia.org/wiki/SS_Arezzo",
+    "file": "File:SS Arezzo crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:SS_Arezzo_crest.svg",
+    "fetchedAt": "2026-07-28T10:46:43.706Z"
+  },
+  "ascoli": {
+    "clubId": "ascoli",
+    "wikidataId": "Q6630",
+    "article": "https://en.wikipedia.org/wiki/Ascoli_Calcio_1898_FC",
+    "file": "File:Ascoli Calcio 1898 logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Ascoli_Calcio_1898_logo.svg",
+    "fetchedAt": "2026-07-28T10:29:06.272Z"
+  },
+  "barakaldo": {
+    "clubId": "barakaldo",
+    "wikidataId": "Q790195",
+    "article": "https://en.wikipedia.org/wiki/Barakaldo_CF",
+    "file": "File:Barakaldo CF logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Barakaldo_CF_logo.svg",
+    "fetchedAt": "2026-07-28T10:12:07.927Z"
+  },
+  "barnet": {
+    "clubId": "barnet",
+    "wikidataId": "Q9408",
+    "article": "https://en.wikipedia.org/wiki/Barnet_F.C.",
+    "file": "File:Barnet FC.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Barnet_FC.svg",
+    "fetchedAt": "2026-07-28T10:05:11.733Z"
+  },
+  "barnsley": {
+    "clubId": "barnsley",
+    "wikidataId": "Q19442",
+    "article": "https://en.wikipedia.org/wiki/Barnsley_F.C.",
+    "file": "File:Barnsley FC.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Barnsley_FC.svg",
+    "fetchedAt": "2026-07-28T09:52:09.703Z"
+  },
+  "benevento": {
+    "clubId": "benevento",
+    "wikidataId": "Q652516",
+    "article": "https://en.wikipedia.org/wiki/Benevento_Calcio",
+    "file": "File:Benevento Calcio logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Benevento_Calcio_logo.svg",
+    "fetchedAt": "2026-07-28T10:53:04.217Z"
+  },
+  "blackpool": {
+    "clubId": "blackpool",
+    "wikidataId": "Q19449",
+    "article": "https://en.wikipedia.org/wiki/Blackpool_F.C.",
+    "file": "File:Blackpool FC logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Blackpool_FC_logo.svg",
+    "fetchedAt": "2026-07-28T09:52:12.603Z"
+  },
+  "bradford-city": {
+    "clubId": "bradford-city",
+    "wikidataId": "Q48879",
+    "article": "https://en.wikipedia.org/wiki/Bradford_City_A.F.C.",
+    "file": "File:Bradford City AFC crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Bradford_City_AFC_crest.svg",
+    "fetchedAt": "2026-07-28T10:05:09.183Z"
+  },
+  "bristol-rovers": {
+    "clubId": "bristol-rovers",
+    "wikidataId": "Q48925",
+    "article": "https://en.wikipedia.org/wiki/Bristol_Rovers_F.C.",
+    "file": "File:Bristol Rovers F.C. logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Bristol_Rovers_F.C._logo.svg",
+    "fetchedAt": "2026-07-28T11:15:10.955Z"
+  },
+  "bromley": {
+    "clubId": "bromley",
+    "wikidataId": "Q1584552",
+    "article": "https://en.wikipedia.org/wiki/Bromley_F.C.",
+    "file": "File:Bromley FC crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Bromley_FC_crest.svg",
+    "fetchedAt": "2026-07-28T11:12:39.383Z"
+  },
+  "burgos": {
+    "clubId": "burgos",
+    "wikidataId": "Q852079",
+    "article": "https://en.wikipedia.org/wiki/Burgos_CF",
+    "file": "File:Burgos CF logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Burgos_CF_logo.svg",
+    "fetchedAt": "2026-07-28T10:07:10.765Z"
+  },
+  "burton": {
+    "clubId": "burton",
+    "wikidataId": "Q48929",
+    "article": "https://en.wikipedia.org/wiki/Burton_Albion_F.C.",
+    "file": "File:Burton Albion FC crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Burton_Albion_FC_crest.svg",
+    "fetchedAt": "2026-07-28T11:12:43.899Z"
+  },
+  "cacereno": {
+    "clubId": "cacereno",
+    "wikidataId": "Q856415",
+    "article": "https://en.wikipedia.org/wiki/CP_Cacere%C3%B1o",
+    "file": "File:CP Cacereño logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:CP_Cacere%C3%B1o_logo.svg",
+    "fetchedAt": "2026-07-28T11:25:13.023Z"
+  },
+  "cambridge-united": {
+    "clubId": "cambridge-united",
+    "wikidataId": "Q18509",
+    "article": "https://en.wikipedia.org/wiki/Cambridge_United_F.C.",
+    "file": "File:Cambridge United FC crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Cambridge_United_FC_crest.svg",
+    "fetchedAt": "2026-07-28T09:53:06.473Z"
+  },
+  "carpi": {
+    "clubId": "carpi",
+    "wikidataId": "Q610621",
+    "article": "https://en.wikipedia.org/wiki/AC_Carpi",
+    "file": "File:AC Carpi crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:AC_Carpi_crest.svg",
+    "fetchedAt": "2026-07-28T10:40:12.191Z"
+  },
+  "carrarese": {
+    "clubId": "carrarese",
+    "wikidataId": "Q650365",
+    "article": "https://en.wikipedia.org/wiki/Carrarese_Calcio_1908",
+    "file": "File:Carrarese Calcio 1908 crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Carrarese_Calcio_1908_crest.svg",
+    "fetchedAt": "2026-07-28T10:30:09.553Z"
+  },
+  "cartagena": {
+    "clubId": "cartagena",
+    "wikidataId": "Q611653",
+    "article": "https://en.wikipedia.org/wiki/FC_Cartagena",
+    "file": "File:FC Cartagena logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:FC_Cartagena_logo.svg",
+    "fetchedAt": "2026-07-28T10:20:14.541Z"
+  },
+  "casertana": {
+    "clubId": "casertana",
+    "wikidataId": "Q1886341",
+    "article": "https://en.wikipedia.org/wiki/Casertana_FC",
+    "file": "File:Casertana FC logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Casertana_FC_logo.svg",
+    "fetchedAt": "2026-07-28T11:03:13.785Z"
+  },
+  "catanzaro": {
+    "clubId": "catanzaro",
+    "wikidataId": "Q501372",
+    "article": "https://en.wikipedia.org/wiki/US_Catanzaro_1929",
+    "file": "File:US Catanzaro 1929 crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:US_Catanzaro_1929_crest.svg",
+    "fetchedAt": "2026-07-28T10:30:14.142Z"
+  },
+  "cavese": {
+    "clubId": "cavese",
+    "wikidataId": "Q1520422",
+    "article": "https://en.wikipedia.org/wiki/Cavese_1919",
+    "file": "File:Cavese 1919 crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Cavese_1919_crest.svg",
+    "fetchedAt": "2026-07-28T11:04:06.406Z"
+  },
+  "cesena": {
+    "clubId": "cesena",
+    "wikidataId": "Q16848949",
+    "article": "https://en.wikipedia.org/wiki/Cesena_FC",
+    "file": "File:Logo Cesena FC 2018.png",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Logo_Cesena_FC_2018.png",
+    "fetchedAt": "2026-07-28T10:53:09.179Z"
+  },
+  "ceuta": {
+    "clubId": "ceuta",
+    "wikidataId": "Q5773365",
+    "article": "https://en.wikipedia.org/wiki/AD_Ceuta_FC",
+    "file": "File:AD Ceuta FC logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:AD_Ceuta_FC_logo.svg",
+    "fetchedAt": "2026-07-28T10:06:56.862Z"
+  },
+  "chesterfield": {
+    "clubId": "chesterfield",
+    "wikidataId": "Q48935",
+    "article": "https://en.wikipedia.org/wiki/Chesterfield_F.C.",
+    "file": "File:Chesterfield FC crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Chesterfield_FC_crest.svg",
+    "fetchedAt": "2026-07-28T09:58:05.092Z"
+  },
+  "colchester": {
+    "clubId": "colchester",
+    "wikidataId": "Q19578",
+    "article": "https://en.wikipedia.org/wiki/Colchester_United_F.C.",
+    "file": "File:Colchester United FC crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Colchester_United_FC_crest.svg",
+    "fetchedAt": "2026-07-28T09:58:05.480Z"
+  },
+  "cordoba": {
+    "clubId": "cordoba",
+    "wikidataId": "Q10499",
+    "article": "https://en.wikipedia.org/wiki/C%C3%B3rdoba_CF",
+    "file": "File:Córdoba CF logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:C%C3%B3rdoba_CF_logo.svg",
+    "fetchedAt": "2026-07-28T10:09:10.493Z"
+  },
+  "coria": {
+    "clubId": "coria",
+    "wikidataId": "Q5010073",
+    "article": "https://en.wikipedia.org/wiki/CD_Coria",
+    "file": "File:CD Coria logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:CD_Coria_logo.svg",
+    "fetchedAt": "2026-07-28T10:12:13.396Z"
+  },
+  "cosenza": {
+    "clubId": "cosenza",
+    "wikidataId": "Q1136016",
+    "article": "https://en.wikipedia.org/wiki/Cosenza_Calcio",
+    "file": "File:Cosenza Calcio crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Cosenza_Calcio_crest.svg",
+    "fetchedAt": "2026-07-28T11:04:11.896Z"
+  },
+  "crawley": {
+    "clubId": "crawley",
+    "wikidataId": "Q19584",
+    "article": "https://en.wikipedia.org/wiki/Crawley_Town_F.C.",
+    "file": "File:Crawley Town FC crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Crawley_Town_FC_crest.svg",
+    "fetchedAt": "2026-07-28T11:16:08.730Z"
+  },
+  "crewe": {
+    "clubId": "crewe",
+    "wikidataId": "Q19587",
+    "article": "https://en.wikipedia.org/wiki/Crewe_Alexandra_F.C.",
+    "file": "File:Crewe Alexandra.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Crewe_Alexandra.svg",
+    "fetchedAt": "2026-07-28T11:16:13.326Z"
+  },
+  "cultural-leonesa": {
+    "clubId": "cultural-leonesa",
+    "wikidataId": "Q582342",
+    "article": "https://en.wikipedia.org/wiki/Cultural_y_Deportiva_Leonesa",
+    "file": "File:Logo of Cultural y Deportiva Leonesa.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Logo_of_Cultural_y_Deportiva_Leonesa.svg",
+    "fetchedAt": "2026-07-28T10:14:08.413Z"
+  },
+  "dolomiti-bellunesi": {
+    "clubId": "dolomiti-bellunesi",
+    "wikidataId": "Q133566447",
+    "article": "https://en.wikipedia.org/wiki/Dolomiti_Bellunesi_(football_club)",
+    "file": "File:Logo Dolomiti Bellunesi Calcio 2024.svg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Logo_Dolomiti_Bellunesi_Calcio_2024.svg",
+    "fetchedAt": "2026-07-28T10:56:06.808Z"
+  },
+  "doncaster": {
+    "clubId": "doncaster",
+    "wikidataId": "Q19589",
+    "article": "https://en.wikipedia.org/wiki/Doncaster_Rovers_F.C.",
+    "file": "File:Doncaster Rovers F.C. logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Doncaster_Rovers_F.C._logo.svg",
+    "fetchedAt": "2026-07-28T09:51:22.787Z"
+  },
+  "eldense": {
+    "clubId": "eldense",
+    "wikidataId": "Q600232",
+    "article": "https://en.wikipedia.org/wiki/CD_Eldense",
+    "file": "File:CD Eldense logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:CD_Eldense_logo.svg",
+    "fetchedAt": "2026-07-28T10:08:06.280Z"
+  },
+  "exeter": {
+    "clubId": "exeter",
+    "wikidataId": "Q48939",
+    "article": "https://en.wikipedia.org/wiki/Exeter_City_F.C.",
+    "file": "File:Exeter City FC.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Exeter_City_FC.svg",
+    "fetchedAt": "2026-07-28T09:59:07.178Z"
+  },
+  "fleetwood": {
+    "clubId": "fleetwood",
+    "wikidataId": "Q48941",
+    "article": "https://en.wikipedia.org/wiki/Fleetwood_Town_F.C.",
+    "file": "File:Fleetwood Town F.C. logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Fleetwood_Town_F.C._logo.svg",
+    "fetchedAt": "2026-07-28T09:59:07.490Z"
+  },
+  "foggia": {
+    "clubId": "foggia",
+    "wikidataId": "Q139399",
+    "article": "https://en.wikipedia.org/wiki/Calcio_Foggia_1920",
+    "file": "File:Calcio Foggia 1920 crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Calcio_Foggia_1920_crest.svg",
+    "fetchedAt": "2026-07-28T11:05:08.799Z"
+  },
+  "forli": {
+    "clubId": "forli",
+    "wikidataId": "Q3077308",
+    "article": "https://en.wikipedia.org/wiki/Forl%C3%AC_FC",
+    "file": "File:Forlì FC logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Forl%C3%AC_FC_logo.svg",
+    "fetchedAt": "2026-07-28T10:58:09.277Z"
+  },
+  "giana-erminio": {
+    "clubId": "giana-erminio",
+    "wikidataId": "Q16735576",
+    "article": "https://en.wikipedia.org/wiki/AS_Giana_Erminio",
+    "file": "File:AS Giana Erminio crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:AS_Giana_Erminio_crest.svg",
+    "fetchedAt": "2026-07-28T10:36:10.496Z"
+  },
+  "grimsby": {
+    "clubId": "grimsby",
+    "wikidataId": "Q18515",
+    "article": "https://en.wikipedia.org/wiki/Grimsby_Town_F.C.",
+    "file": "File:Grimsby Town F.C. logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Grimsby_Town_F.C._logo.svg",
+    "fetchedAt": "2026-07-28T11:17:04.954Z"
+  },
+  "gubbio": {
+    "clubId": "gubbio",
+    "wikidataId": "Q298314",
+    "article": "https://en.wikipedia.org/wiki/AS_Gubbio_1910",
+    "file": "File:AS Gubbio 1910 crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:AS_Gubbio_1910_crest.svg",
+    "fetchedAt": "2026-07-28T10:49:06.090Z"
+  },
+  "guidonia": {
+    "clubId": "guidonia",
+    "wikidataId": "Q107222619",
+    "article": "https://en.wikipedia.org/wiki/Guidonia_Montecelio_1937_FC",
+    "file": "File:Guidonia Montecelio 1937 FC logo.png",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Guidonia_Montecelio_1937_FC_logo.png",
+    "fetchedAt": "2026-07-28T10:59:08.221Z"
+  },
+  "hercules": {
+    "clubId": "hercules",
+    "wikidataId": "Q11963",
+    "article": "https://en.wikipedia.org/wiki/H%C3%A9rcules_CF",
+    "file": "File:Hercules CF crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Hercules_CF_crest.svg",
+    "fetchedAt": "2026-07-28T10:21:06.725Z"
+  },
+  "huddersfield": {
+    "clubId": "huddersfield",
+    "wikidataId": "Q19473",
+    "article": "https://en.wikipedia.org/wiki/Huddersfield_Town_A.F.C.",
+    "file": "File:Huddersfield Town AFC crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Huddersfield_Town_AFC_crest.svg",
+    "fetchedAt": "2026-07-28T09:53:07.456Z"
+  },
+  "ibiza": {
+    "clubId": "ibiza",
+    "wikidataId": "Q30587901",
+    "article": "https://en.wikipedia.org/wiki/UD_Ibiza",
+    "file": "File:UD Ibiza logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:UD_Ibiza_logo.svg",
+    "fetchedAt": "2026-07-28T10:23:10.691Z"
+  },
+  "juve-stabia": {
+    "clubId": "juve-stabia",
+    "wikidataId": "Q6748",
+    "article": "https://en.wikipedia.org/wiki/SS_Juve_Stabia",
+    "file": "File:SS Juve Stabia crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:SS_Juve_Stabia_crest.svg",
+    "fetchedAt": "2026-07-28T10:31:07.587Z"
+  },
+  "juventud-torremolinos": {
+    "clubId": "juventud-torremolinos",
+    "wikidataId": "Q24185083",
+    "article": "https://en.wikipedia.org/wiki/Juventud_de_Torremolinos_CF",
+    "file": "File:Juventud de Torremolinos CF logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Juventud_de_Torremolinos_CF_logo.svg",
+    "fetchedAt": "2026-07-28T10:21:12.226Z"
+  },
+  "latina": {
+    "clubId": "latina",
+    "wikidataId": "Q2118510",
+    "article": "https://en.wikipedia.org/wiki/Latina_Calcio_1932",
+    "file": "File:Latina Calcio 1932 crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Latina_Calcio_1932_crest.svg",
+    "fetchedAt": "2026-07-28T10:49:11.509Z"
+  },
+  "leyton-orient": {
+    "clubId": "leyton-orient",
+    "wikidataId": "Q19595",
+    "article": "https://en.wikipedia.org/wiki/Leyton_Orient_F.C.",
+    "file": "File:Leyton Orient F.C. logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Leyton_Orient_F.C._logo.svg",
+    "fetchedAt": "2026-07-28T11:13:10.026Z"
+  },
+  "lincoln": {
+    "clubId": "lincoln",
+    "wikidataId": "Q18519",
+    "article": "https://en.wikipedia.org/wiki/Lincoln_City_F.C.",
+    "file": "File:Lincoln City FC 2024 crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Lincoln_City_FC_2024_crest.svg",
+    "fetchedAt": "2026-07-28T09:44:50.607Z"
+  },
+  "livorno": {
+    "clubId": "livorno",
+    "wikidataId": "Q6767",
+    "article": "https://en.wikipedia.org/wiki/US_Livorno_1915",
+    "file": "File:Livorno-Stemma semplificato.svg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Livorno-Stemma_semplificato.svg",
+    "fetchedAt": "2026-07-28T11:10:40.850Z"
+  },
+  "lr-vicenza": {
+    "clubId": "lr-vicenza",
+    "wikidataId": "Q56542463",
+    "article": "https://en.wikipedia.org/wiki/LR_Vicenza",
+    "file": "File:LR Vicenza Virtus (logo).svg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:LR_Vicenza_Virtus_(logo).svg",
+    "fetchedAt": "2026-07-28T10:31:12.987Z"
+  },
+  "lugo": {
+    "clubId": "lugo",
+    "wikidataId": "Q11984",
+    "article": "https://en.wikipedia.org/wiki/CD_Lugo",
+    "file": "File:CD Lugo logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:CD_Lugo_logo.svg",
+    "fetchedAt": "2026-07-28T10:13:05.966Z"
+  },
+  "lumezzane": {
+    "clubId": "lumezzane",
+    "wikidataId": "Q63994855",
+    "article": "https://en.wikipedia.org/wiki/FC_Lumezzane",
+    "file": "File:FC Lumezzane crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:FC_Lumezzane_crest.svg",
+    "fetchedAt": "2026-07-28T10:57:08.560Z"
+  },
+  "luton": {
+    "clubId": "luton",
+    "wikidataId": "Q18520",
+    "article": "https://en.wikipedia.org/wiki/Luton_Town_F.C.",
+    "file": "File:Luton Town logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Luton_Town_logo.svg",
+    "fetchedAt": "2026-07-28T11:13:14.569Z"
+  },
+  "mansfield": {
+    "clubId": "mansfield",
+    "wikidataId": "Q18522",
+    "article": "https://en.wikipedia.org/wiki/Mansfield_Town_F.C.",
+    "file": "File:Mansfield Town FC.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Mansfield_Town_FC.svg",
+    "fetchedAt": "2026-07-28T09:54:08.735Z"
+  },
+  "mirandes": {
+    "clubId": "mirandes",
+    "wikidataId": "Q11997",
+    "article": "https://en.wikipedia.org/wiki/CD_Mirand%C3%A9s",
+    "file": "File:CD Mirandés logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:CD_Mirand%C3%A9s_logo.svg",
+    "fetchedAt": "2026-07-28T10:13:11.626Z"
+  },
+  "mk-dons": {
+    "clubId": "mk-dons",
+    "wikidataId": "Q248188",
+    "article": "https://en.wikipedia.org/wiki/Milton_Keynes_Dons_F.C.",
+    "file": "File:Milton Keynes Dons FC 2025 crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Milton_Keynes_Dons_FC_2025_crest.svg",
+    "fetchedAt": "2026-07-28T09:54:09.548Z"
+  },
+  "modena": {
+    "clubId": "modena",
+    "wikidataId": "Q8408",
+    "article": "https://en.wikipedia.org/wiki/Modena_FC_2018",
+    "file": "File:Modena FC 2018 crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Modena_FC_2018_crest.svg",
+    "fetchedAt": "2026-07-28T10:32:04.696Z"
+  },
+  "newport": {
+    "clubId": "newport",
+    "wikidataId": "Q18523",
+    "article": "https://en.wikipedia.org/wiki/Newport_County_A.F.C.",
+    "file": "File:Newport County AFC crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Newport_County_AFC_crest.svg",
+    "fetchedAt": "2026-07-28T11:17:10.369Z"
+  },
+  "northampton": {
+    "clubId": "northampton",
+    "wikidataId": "Q48945",
+    "article": "https://en.wikipedia.org/wiki/Northampton_Town_F.C.",
+    "file": "File:Northampton Town F.C. logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Northampton_Town_F.C._logo.svg",
+    "fetchedAt": "2026-07-28T10:00:09.790Z"
+  },
+  "notts-county": {
+    "clubId": "notts-county",
+    "wikidataId": "Q19598",
+    "article": "https://en.wikipedia.org/wiki/Notts_County_F.C.",
+    "file": "File:Notts County Logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Notts_County_Logo.svg",
+    "fetchedAt": "2026-07-28T11:13:19.047Z"
+  },
+  "novara": {
+    "clubId": "novara",
+    "wikidataId": "Q8416",
+    "article": "https://en.wikipedia.org/wiki/Novara_FC",
+    "file": "File:Novara FC crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Novara_FC_crest.svg",
+    "fetchedAt": "2026-07-28T10:37:10.131Z"
+  },
+  "ourense": {
+    "clubId": "ourense",
+    "wikidataId": "Q20543549",
+    "article": "https://en.wikipedia.org/wiki/UD_Ourense",
+    "file": "File:UD Ourense logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:UD_Ourense_logo.svg",
+    "fetchedAt": "2026-07-28T11:26:14.515Z"
+  },
+  "palermo": {
+    "clubId": "palermo",
+    "wikidataId": "Q2674",
+    "article": "https://en.wikipedia.org/wiki/Palermo_FC",
+    "file": "File:Logo Palermo 1898.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Logo_Palermo_1898.svg",
+    "fetchedAt": "2026-07-28T10:54:09.473Z"
+  },
+  "pergolettese": {
+    "clubId": "pergolettese",
+    "wikidataId": "Q1968070",
+    "article": "https://en.wikipedia.org/wiki/US_Pergolettese_1932",
+    "file": "File:US Pergolettese 1932 (logo).svg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:US_Pergolettese_1932_(logo).svg",
+    "fetchedAt": "2026-07-28T10:38:08.156Z"
+  },
+  "perugia": {
+    "clubId": "perugia",
+    "wikidataId": "Q16344",
+    "article": "https://en.wikipedia.org/wiki/AC_Perugia_Calcio",
+    "file": "File:Ac Perugia logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Ac_Perugia_logo.svg",
+    "fetchedAt": "2026-07-28T10:50:08.442Z"
+  },
+  "pescara": {
+    "clubId": "pescara",
+    "wikidataId": "Q2710",
+    "article": "https://en.wikipedia.org/wiki/Delfino_Pescara_1936",
+    "file": "File:Delfino Pescara logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Delfino_Pescara_logo.svg",
+    "fetchedAt": "2026-07-28T10:50:13.900Z"
+  },
+  "peterborough": {
+    "clubId": "peterborough",
+    "wikidataId": "Q19495",
+    "article": "https://en.wikipedia.org/wiki/Peterborough_United_F.C.",
+    "file": "File:Peterborough United's new badge.svg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Peterborough_United%27s_new_badge.svg",
+    "fetchedAt": "2026-07-28T09:55:04.885Z"
+  },
+  "picerno": {
+    "clubId": "picerno",
+    "wikidataId": "Q64876680",
+    "article": "https://en.wikipedia.org/wiki/AZ_Picerno",
+    "file": "File:AZ Picerno crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:AZ_Picerno_crest.svg",
+    "fetchedAt": "2026-07-28T11:06:05.905Z"
+  },
+  "pineto": {
+    "clubId": "pineto",
+    "wikidataId": "Q3627007",
+    "article": "https://en.wikipedia.org/wiki/AS_Pineto_Calcio",
+    "file": "File:AS Pineto Calcio crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:AS_Pineto_Calcio_crest.svg",
+    "fetchedAt": "2026-07-28T11:00:07.956Z"
+  },
+  "pisa": {
+    "clubId": "pisa",
+    "wikidataId": "Q289613",
+    "article": "https://en.wikipedia.org/wiki/Pisa_SC",
+    "file": "File:Pisa SC crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Pisa_SC_crest.svg",
+    "fetchedAt": "2026-07-28T10:47:05.519Z"
+  },
+  "plymouth": {
+    "clubId": "plymouth",
+    "wikidataId": "Q48947",
+    "article": "https://en.wikipedia.org/wiki/Plymouth_Argyle_F.C.",
+    "file": "File:Plymouth Argyle F.C. logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Plymouth_Argyle_F.C._logo.svg",
+    "fetchedAt": "2026-07-28T09:55:05.311Z"
+  },
+  "ponferradina": {
+    "clubId": "ponferradina",
+    "wikidataId": "Q7389522",
+    "article": "https://en.wikipedia.org/wiki/SD_Ponferradina_B",
+    "file": "File:SD Ponferradina logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:SD_Ponferradina_logo.svg",
+    "fetchedAt": "2026-07-28T10:16:08.390Z"
+  },
+  "pontevedra": {
+    "clubId": "pontevedra",
+    "wikidataId": "Q849271",
+    "article": "https://en.wikipedia.org/wiki/Pontevedra_CF",
+    "file": "File:Pontevedra CF logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Pontevedra_CF_logo.svg",
+    "fetchedAt": "2026-07-28T10:14:13.871Z"
+  },
+  "port-vale": {
+    "clubId": "port-vale",
+    "wikidataId": "Q48948",
+    "article": "https://en.wikipedia.org/wiki/Port_Vale_F.C.",
+    "file": "File:Port Vale logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Port_Vale_logo.svg",
+    "fetchedAt": "2026-07-28T09:48:03.151Z"
+  },
+  "potenza": {
+    "clubId": "potenza",
+    "wikidataId": "Q2457991",
+    "article": "https://en.wikipedia.org/wiki/Potenza_Calcio",
+    "file": "File:Potenza Calcio crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Potenza_Calcio_crest.svg",
+    "fetchedAt": "2026-07-28T11:06:10.436Z"
+  },
+  "pro-vercelli": {
+    "clubId": "pro-vercelli",
+    "wikidataId": "Q8455",
+    "article": "https://en.wikipedia.org/wiki/FC_Pro_Vercelli_1892",
+    "file": "File:FC Pro Vercelli 1892 crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:FC_Pro_Vercelli_1892_crest.svg",
+    "fetchedAt": "2026-07-28T10:38:12.687Z"
+  },
+  "racing-santander": {
+    "clubId": "racing-santander",
+    "wikidataId": "Q12236",
+    "article": "https://en.wikipedia.org/wiki/Racing_de_Santander",
+    "file": "File:Racing de Santander logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Racing_de_Santander_logo.svg",
+    "fetchedAt": "2026-07-28T10:28:06.851Z"
+  },
+  "ravenna": {
+    "clubId": "ravenna",
+    "wikidataId": "Q1349814",
+    "article": "https://en.wikipedia.org/wiki/Ravenna_FC",
+    "file": "File:Ravenna FC logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Ravenna_FC_logo.svg",
+    "fetchedAt": "2026-07-28T10:44:13.791Z"
+  },
+  "rayo-majadahonda": {
+    "clubId": "rayo-majadahonda",
+    "wikidataId": "Q2511257",
+    "article": "https://en.wikipedia.org/wiki/CF_Rayo_Majadahonda",
+    "file": "File:CF Rayo Majadahonda logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:CF_Rayo_Majadahonda_logo.svg",
+    "fetchedAt": "2026-07-28T10:20:09.138Z"
+  },
+  "reading": {
+    "clubId": "reading",
+    "wikidataId": "Q18729",
+    "article": "https://en.wikipedia.org/wiki/Reading_F.C.",
+    "file": "File:Reading FC crest (1987-96).svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Reading_FC_crest_(1987-96).svg",
+    "fetchedAt": "2026-07-28T11:14:08.363Z"
+  },
+  "real-aviles": {
+    "clubId": "real-aviles",
+    "wikidataId": "Q720872",
+    "article": "https://en.wikipedia.org/wiki/Real_Avil%C3%A9s_Industrial_CF",
+    "file": "File:Real Avilés Industrial CF logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Real_Avil%C3%A9s_Industrial_CF_logo.svg",
+    "fetchedAt": "2026-07-28T10:15:08.468Z"
+  },
+  "real-murcia": {
+    "clubId": "real-murcia",
+    "wikidataId": "Q12230",
+    "article": "https://en.wikipedia.org/wiki/Real_Murcia_CF",
+    "file": "File:Real Murcia CF logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Real_Murcia_CF_logo.svg",
+    "fetchedAt": "2026-07-28T10:22:12.577Z"
+  },
+  "real-oviedo": {
+    "clubId": "real-oviedo",
+    "wikidataId": "Q271574",
+    "article": "https://en.wikipedia.org/wiki/Real_Oviedo",
+    "file": "File:Real Oviedo logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Real_Oviedo_logo.svg",
+    "fetchedAt": "2026-07-28T10:10:12.880Z"
+  },
+  "rochdale": {
+    "clubId": "rochdale",
+    "wikidataId": "Q48949",
+    "article": "https://en.wikipedia.org/wiki/Rochdale_A.F.C.",
+    "file": "File:Rochdale AFC crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Rochdale_AFC_crest.svg",
+    "fetchedAt": "2026-07-28T10:52:14.585Z"
+  },
+  "rotherham": {
+    "clubId": "rotherham",
+    "wikidataId": "Q48950",
+    "article": "https://en.wikipedia.org/wiki/Rotherham_United_F.C.",
+    "file": "File:Rotherham United F.C. svg.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Rotherham_United_F.C._svg.svg",
+    "fetchedAt": "2026-07-28T09:48:03.321Z"
+  },
+  "sabadell": {
+    "clubId": "sabadell",
+    "wikidataId": "Q5010402",
+    "article": "https://en.wikipedia.org/wiki/CE_Sabadell_(women)",
+    "file": "File:CE Sabadell FC logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:CE_Sabadell_FC_logo.svg",
+    "fetchedAt": "2026-07-28T11:23:02.887Z"
+  },
+  "salford": {
+    "clubId": "salford",
+    "wikidataId": "Q18460",
+    "article": "https://en.wikipedia.org/wiki/Salford_City_F.C.",
+    "file": "File:Salford City F.C. new logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Salford_City_F.C._new_logo.svg",
+    "fetchedAt": "2026-07-28T11:18:07.423Z"
+  },
+  "sambenedettese": {
+    "clubId": "sambenedettese",
+    "wikidataId": "Q1785447",
+    "article": "https://en.wikipedia.org/wiki/AS_Sambenedettese",
+    "file": "File:AS Sambenedettese logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:AS_Sambenedettese_logo.svg",
+    "fetchedAt": "2026-07-28T11:01:07.836Z"
+  },
+  "savoia": {
+    "clubId": "savoia",
+    "wikidataId": "Q2158769",
+    "article": "https://en.wikipedia.org/wiki/SSD_Savoia_1908_FC",
+    "file": "File:Logo US Savoia 1908.png",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Logo_US_Savoia_1908.png",
+    "fetchedAt": "2026-07-28T11:07:08.837Z"
+  },
+  "scafatese": {
+    "clubId": "scafatese",
+    "wikidataId": "Q1132621",
+    "article": "https://en.wikipedia.org/wiki/Scafatese_Calcio_1922",
+    "file": "File:ScafateseCalcio.png",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:ScafateseCalcio.png",
+    "fetchedAt": "2026-07-28T11:07:12.721Z"
+  },
+  "sheffield-wednesday": {
+    "clubId": "sheffield-wednesday",
+    "wikidataId": "Q19498",
+    "article": "https://en.wikipedia.org/wiki/Sheffield_Wednesday_F.C.",
+    "file": "File:Sheffield Wednesday FC 2026 crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Sheffield_Wednesday_FC_2026_crest.svg",
+    "fetchedAt": "2026-07-28T11:14:12.445Z"
+  },
+  "shrewsbury": {
+    "clubId": "shrewsbury",
+    "wikidataId": "Q19626",
+    "article": "https://en.wikipedia.org/wiki/Shrewsbury_Town_F.C.",
+    "file": "File:Shrewsbury Town F.C. logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Shrewsbury_Town_F.C._logo.svg",
+    "fetchedAt": "2026-07-28T11:18:12.041Z"
+  },
+  "spezia": {
+    "clubId": "spezia",
+    "wikidataId": "Q8615",
+    "article": "https://en.wikipedia.org/wiki/Spezia_Calcio",
+    "file": "File:Spezia Calcio crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Spezia_Calcio_crest.svg",
+    "fetchedAt": "2026-07-28T11:01:13.163Z"
+  },
+  "sporting-gijon": {
+    "clubId": "sporting-gijon",
+    "wikidataId": "Q6102152",
+    "article": "https://en.wikipedia.org/wiki/Real_Sporting_San_Jos%C3%A9",
+    "file": "File:Escudo de Gran Canaria.svg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Escudo_de_Gran_Canaria.svg",
+    "fetchedAt": "2026-07-28T11:24:12.185Z"
+  },
+  "stevenage": {
+    "clubId": "stevenage",
+    "wikidataId": "Q9426",
+    "article": "https://en.wikipedia.org/wiki/Stevenage_F.C.",
+    "file": "File:Stevenage FC crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Stevenage_FC_crest.svg",
+    "fetchedAt": "2026-07-28T09:56:07.584Z"
+  },
+  "stockport": {
+    "clubId": "stockport",
+    "wikidataId": "Q18526",
+    "article": "https://en.wikipedia.org/wiki/Stockport_County_F.C.",
+    "file": "File:Stockport County FC logo 2020.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Stockport_County_FC_logo_2020.svg",
+    "fetchedAt": "2026-07-28T09:56:07.175Z"
+  },
+  "swindon": {
+    "clubId": "swindon",
+    "wikidataId": "Q19634",
+    "article": "https://en.wikipedia.org/wiki/Swindon_Town_F.C.",
+    "file": "File:Swindon Town FC.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Swindon_Town_FC.svg",
+    "fetchedAt": "2026-07-28T10:03:45.518Z"
+  },
+  "team-altamura": {
+    "clubId": "team-altamura",
+    "wikidataId": "Q125784026",
+    "article": "https://en.wikipedia.org/wiki/Team_Altamura",
+    "file": "File:Team Altamura logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Team_Altamura_logo.svg",
+    "fetchedAt": "2026-07-28T11:02:12.239Z"
+  },
+  "tenerife": {
+    "clubId": "tenerife",
+    "wikidataId": "Q216661",
+    "article": "https://en.wikipedia.org/wiki/CD_Tenerife",
+    "file": "File:CD Tenerife emblem.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:CD_Tenerife_emblem.svg",
+    "fetchedAt": "2026-07-28T10:08:11.991Z"
+  },
+  "teruel": {
+    "clubId": "teruel",
+    "wikidataId": "Q2128712",
+    "article": "https://en.wikipedia.org/wiki/CD_Teruel",
+    "file": "File:CD Teruel logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:CD_Teruel_logo.svg",
+    "fetchedAt": "2026-07-28T10:19:10.795Z"
+  },
+  "tranmere": {
+    "clubId": "tranmere",
+    "wikidataId": "Q19637",
+    "article": "https://en.wikipedia.org/wiki/Tranmere_Rovers_F.C.",
+    "file": "File:Tranmere Rovers FC crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Tranmere_Rovers_FC_crest.svg",
+    "fetchedAt": "2026-07-28T10:01:05.327Z"
+  },
+  "trento": {
+    "clubId": "trento",
+    "wikidataId": "Q638882",
+    "article": "https://en.wikipedia.org/wiki/AC_Trento_1921",
+    "file": "File:AC Trento 1921 crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:AC_Trento_1921_crest.svg",
+    "fetchedAt": "2026-07-28T10:48:08.034Z"
+  },
+  "treviso": {
+    "clubId": "treviso",
+    "wikidataId": "Q611222",
+    "article": "https://en.wikipedia.org/wiki/Treviso_FBC_1993",
+    "file": "File:Treviso FBC 1993 logo.png",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Treviso_FBC_1993_logo.png",
+    "fetchedAt": "2026-07-28T10:48:13.681Z"
+  },
+  "ud-logrones": {
+    "clubId": "ud-logrones",
+    "wikidataId": "Q1067737",
+    "article": "https://en.wikipedia.org/wiki/UD_Logro%C3%B1%C3%A9s",
+    "file": "File:UD Logroñés logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:UD_Logro%C3%B1%C3%A9s_logo.svg",
+    "fetchedAt": "2026-07-28T10:16:13.916Z"
+  },
+  "union-brescia": {
+    "clubId": "union-brescia",
+    "wikidataId": "Q135415841",
+    "article": "https://en.wikipedia.org/wiki/Union_Brescia",
+    "file": "File:Union Brescia crest.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Union_Brescia_crest.svg",
+    "fetchedAt": "2026-07-28T10:55:11.596Z"
+  },
+  "unionistas": {
+    "clubId": "unionistas",
+    "wikidataId": "Q20278773",
+    "article": "https://en.wikipedia.org/wiki/Unionistas_de_Salamanca_CF",
+    "file": "File:Unionistas de Salamanca CF logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Unionistas_de_Salamanca_CF_logo.svg",
+    "fetchedAt": "2026-07-28T10:17:06.440Z"
+  },
+  "villarreal-b": {
+    "clubId": "villarreal-b",
+    "wikidataId": "Q1094113",
+    "article": "https://en.wikipedia.org/wiki/Villarreal_CF_B",
+    "file": "File:Villarreal CF logo-en.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Villarreal_CF_logo-en.svg",
+    "fetchedAt": "2026-07-28T10:24:08.271Z"
+  },
+  "virtus-entella": {
+    "clubId": "virtus-entella",
+    "wikidataId": "Q2276413",
+    "article": "https://en.wikipedia.org/wiki/Virtus_Entella",
+    "file": "File:Virtus Entella logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Virtus_Entella_logo.svg",
+    "fetchedAt": "2026-07-28T10:33:12.977Z"
+  },
+  "vis-pesaro": {
+    "clubId": "vis-pesaro",
+    "wikidataId": "Q2414604",
+    "article": "https://en.wikipedia.org/wiki/Vis_Pesaro_dal_1898",
+    "file": "File:Logo storico Vis Pesaro.png",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Logo_storico_Vis_Pesaro.png",
+    "fetchedAt": "2026-07-28T11:02:07.209Z"
+  },
+  "wrexham": {
+    "clubId": "wrexham",
+    "wikidataId": "Q18529",
+    "article": "https://en.wikipedia.org/wiki/Wrexham_A.F.C.",
+    "file": "File:Wrexham A.F.C. Logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Wrexham_A.F.C._Logo.svg",
+    "fetchedAt": "2026-07-28T09:52:09.024Z"
+  },
+  "wycombe": {
+    "clubId": "wycombe",
+    "wikidataId": "Q48953",
+    "article": "https://en.wikipedia.org/wiki/Wycombe_Wanderers_F.C.",
+    "file": "File:Wycombe Wanderers FC logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Wycombe_Wanderers_FC_logo.svg",
+    "fetchedAt": "2026-07-28T11:15:06.286Z"
+  },
+  "york": {
+    "clubId": "york",
+    "wikidataId": "Q48954",
+    "article": "https://en.wikipedia.org/wiki/York_City_F.C.",
+    "file": "File:York City FC.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:York_City_FC.svg",
+    "fetchedAt": "2026-07-28T11:19:05.512Z"
+  },
+  "zamora": {
+    "clubId": "zamora",
+    "wikidataId": "Q544120",
+    "article": "https://en.wikipedia.org/wiki/Zamora_CF",
+    "file": "File:Zamora CF logo.svg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/File:Zamora_CF_logo.svg",
+    "fetchedAt": "2026-07-28T10:17:11.733Z"
+  }
+}

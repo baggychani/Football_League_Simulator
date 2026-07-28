@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import {
   runBrowserCalibration,
   type CalibrationProgress,
@@ -6,21 +6,25 @@ import {
 } from '../calibration/browser-calibrator';
 import { initialRatings, normalizeMarketProbabilities } from '../calibration/market';
 import {
-  EPL_CHAMPION_EVENT_SLUG,
-  fetchPolymarketEplChampion,
+  ACTIVE_CHAMPION_EVENT_SLUG,
+  fetchPolymarketChampion,
   mergeMarketSnapshot,
   type PolymarketFetchResult,
 } from '../calibration/polymarket';
 import {
   META_STORAGE_KEY,
+  LEGACY_META_STORAGE_KEY,
   readStoredMarket,
   writeStoredMarket,
   writeStoredRatings,
 } from '../calibration/market-storage';
-import calibratedRatings from '../data/calibrated-ratings.json';
-import rawMarket from '../data/default-market.json';
-import polymarketMeta from '../data/polymarket-meta.json';
+import {
+  activeMarketMeta as polymarketMeta,
+  activeMarketSnapshot as rawMarket,
+  activeRatingsArtifact as calibratedRatings,
+} from '../data/active-data';
 import { teams } from '../data/teams';
+import { activeLeague } from '../data/league-catalog/active';
 
 const LOCAL_API_HEADERS = { 'Content-Type': 'application/json', 'X-Football-Local-Api': '1' };
 
@@ -44,6 +48,48 @@ type MarketUpdateResponse = {
   changedTeams: string[];
 };
 
+function isMarketMeta(value: unknown): value is MarketMeta {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const candidate = value as Record<string, unknown>;
+  const stringFields = ['slug', 'title', 'fetchedAt', 'source'];
+  const arrayFields = [
+    'matchedTeams',
+    'unmatchedPolymarket',
+    'missingTeams',
+    'changedTeams',
+  ];
+  if (!stringFields.every(field =>
+    typeof candidate[field] === 'string' && candidate[field].length > 0
+  ) && arrayFields.every(field =>
+    Array.isArray(candidate[field])
+    && candidate[field].every(item => typeof item === 'string')
+    && new Set(candidate[field] as string[]).size === (candidate[field] as string[]).length
+  )) {
+    return false;
+  }
+  if (!Number.isFinite(Date.parse(candidate.fetchedAt as string))) return false;
+  try {
+    if (new URL(candidate.source as string).protocol !== 'https:') return false;
+  } catch {
+    return false;
+  }
+  if (
+    activeLeague.market
+    && candidate.slug !== activeLeague.market.eventSlug
+  ) {
+    return false;
+  }
+  const expectedIds = new Set(teams.map(team => team.id));
+  const matched = candidate.matchedTeams as string[];
+  const missing = candidate.missingTeams as string[];
+  const changed = candidate.changedTeams as string[];
+  const described = new Set([...matched, ...missing]);
+  return !matched.some(id => missing.includes(id))
+    && described.size === expectedIds.size
+    && [...described].every(id => expectedIds.has(id))
+    && changed.every(id => expectedIds.has(id));
+}
+
 function pct(value: number, digits = 2) {
   return `${(value * 100).toFixed(digits)}%`;
 }
@@ -52,26 +98,50 @@ function pp(value: number) {
   return `${value >= 0 ? '+' : ''}${(value * 100).toFixed(2)}pp`;
 }
 
-function formatFetchedAt(iso: string) {
+function formatUpdateAt(iso: string) {
   try {
-    return new Intl.DateTimeFormat('ko-KR', {
+    const parts = new Intl.DateTimeFormat('en-CA', {
       timeZone: 'Asia/Seoul',
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
+      hourCycle: 'h23',
+    }).formatToParts(new Date(iso));
+    const part = (type: Intl.DateTimeFormatPartTypes) => parts.find(item => item.type === type)?.value ?? '';
+    return {
+      date: `${part('year')}.${part('month')}.${part('day')}`,
+      time: `${part('hour')}:${part('minute')}`,
+    };
+  } catch {
+    return {
+      date: iso.slice(0, 10).replaceAll('-', '.'),
+      time: iso.slice(11, 16),
+    };
+  }
+}
+
+function localDateKey(iso: string) {
+  try {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Seoul',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
     }).format(new Date(iso));
   } catch {
-    return iso.slice(0, 16).replace('T', ' ');
+    return iso.slice(0, 10);
   }
 }
 
 function readStoredMeta(): MarketMeta {
   try {
-    const stored = localStorage.getItem(META_STORAGE_KEY);
+    const stored = localStorage.getItem(META_STORAGE_KEY)
+      ?? localStorage.getItem(LEGACY_META_STORAGE_KEY);
     if (!stored) return polymarketMeta as MarketMeta;
-    return JSON.parse(stored) as MarketMeta;
+    const candidate = JSON.parse(stored) as unknown;
+    return isMarketMeta(candidate) ? candidate : polymarketMeta as MarketMeta;
   } catch {
     return polymarketMeta as MarketMeta;
   }
@@ -97,6 +167,7 @@ function useSmoothNumber(target: number | null, speed = 0.22) {
       }
       current.current = next;
       setValue(next);
+      frame = requestAnimationFrame(step);
     };
     frame = requestAnimationFrame(step);
     return () => cancelAnimationFrame(frame);
@@ -137,6 +208,11 @@ function toneOf(row: TeamCalibrationRow): Tone {
   }
   if (row.withinTolerance === null) return 'muted';
   return row.withinTolerance ? 'ok' : 'warn';
+}
+
+function hasCalibrationIssue(row: TeamCalibrationRow) {
+  const tone = toneOf(row);
+  return tone === 'warn' || tone === 'bad';
 }
 
 function toneMark(tone: Tone) {
@@ -195,7 +271,7 @@ function rowsFromMarket(
       const sim = previous?.simulated ?? null;
       return {
         id: team.id,
-        name: team.name,
+        name: team.nameKo ?? team.name,
         color: team.color,
         crestUrl: team.crestUrl ?? '',
         market: market[team.id] ?? 0,
@@ -228,7 +304,7 @@ function rowsFromSaved(
       const diagnostic = diagnostics[team.id];
       return {
         id: team.id,
-        name: team.name,
+        name: team.nameKo ?? team.name,
         color: team.color,
         crestUrl: team.crestUrl ?? '',
         market: market[team.id] ?? 0,
@@ -285,8 +361,8 @@ export function CalibrationLab({
     loss: (calibratedRatings as { loss?: number }).loss ?? null,
     message: hasSavedResult
       ? savedOutside === 0
-        ? '저장된 보정 결과 · 전 팀 허용오차 내'
-        : `저장된 보정 결과 · 허용오차 밖 ${savedOutside}팀`
+        ? '전 팀 허용오차 내'
+        : `허용오차 밖 ${savedOutside}팀`
       : '대기',
     rows: hasSavedResult
       ? rowsFromSaved(readStoredMarket(), normalizeMarketProbabilities(readStoredMarket(), teams), calibratedRatings)
@@ -298,7 +374,7 @@ export function CalibrationLab({
             const ratings = saved && Object.keys(saved).length === teams.length ? saved : initialRatings(initialTarget);
             return {
               id: team.id,
-              name: team.name,
+              name: team.nameKo ?? team.name,
               color: team.color,
               crestUrl: team.crestUrl ?? '',
               market: initialMarket[team.id] ?? 0,
@@ -318,10 +394,14 @@ export function CalibrationLab({
   const [hasResult, setHasResult] = useState(hasSavedResult);
   const [saveState, setSaveState] = useState('');
   const [marketMeta, setMarketMeta] = useState<MarketMeta>(readStoredMeta);
-  const [marketFlash, setMarketFlash] = useState(false);
-  const [marketStatus, setMarketStatus] = useState('');
+  const [calibrationUpdatedAt, setCalibrationUpdatedAt] = useState(
+    (calibratedRatings as { createdAt?: string }).createdAt ?? new Date(0).toISOString(),
+  );
+  const [marketError, setMarketError] = useState('');
   const abortRef = useRef<AbortController | null>(null);
   const resultRef = useRef<Record<string, unknown> | null>(null);
+
+  useEffect(() => () => abortRef.current?.abort(), []);
 
   const overall = useMemo(() => {
     if (progress.phase === 'done') return 100;
@@ -332,40 +412,79 @@ export function CalibrationLab({
     return Math.min(92, 8 + (progress.iteration % 40) * 2);
   }, [progress]);
 
-  const marketFetchedLabel = formatFetchedAt(marketMeta.fetchedAt);
-  const polymarketUrl = `https://polymarket.com/event/${marketMeta.slug || EPL_CHAMPION_EVENT_SLUG}`;
+  const marketFetchedLabel = formatUpdateAt(marketMeta.fetchedAt);
+  const calibrationUpdatedLabel = formatUpdateAt(calibrationUpdatedAt);
+  const updateDatesDiffer = localDateKey(marketMeta.fetchedAt) !== localDateKey(calibrationUpdatedAt);
+  const marketAge = Date.now() - new Date(marketMeta.fetchedAt).getTime();
+  const needsMarketRefresh = !Number.isFinite(marketAge) || marketAge > 24 * 60 * 60 * 1000;
+  const calibrationIssueCount = progress.rows.filter(hasCalibrationIssue).length;
+  const needsCalibration = hasResult ? calibrationIssueCount > 0 : true;
+  const operationalStatus = marketBusy
+    ? '업데이트 중'
+    : busy
+      ? phaseLabel(progress)
+      : marketError
+        ? '업데이트 오류'
+      : progress.phase === 'error'
+        ? '오류'
+        : needsMarketRefresh
+          ? '업데이트 필요'
+          : needsCalibration
+            ? '보정 필요'
+            : hasResult
+              ? '사용 가능'
+              : '보정 필요';
+  const operationalTone = marketError || progress.phase === 'error'
+    ? 'error'
+    : needsMarketRefresh
+      ? 'refresh'
+      : needsCalibration
+        ? 'calibrate'
+        : hasResult
+          ? 'ready'
+          : 'idle';
+  const operationalDetail = marketBusy
+    ? '시장 데이터를 확인하고 있습니다.'
+    : busy
+      ? progress.message
+      : marketError
+        ? marketError
+      : progress.phase === 'error'
+        ? progress.message
+        : needsMarketRefresh
+          ? '시장 데이터가 24시간을 넘었습니다.'
+          : needsCalibration
+            ? calibrationIssueCount > 0
+              ? `주의·초과 ${calibrationIssueCount}팀을 다시 맞춰야 합니다.`
+              : '먼저 시장 보정을 실행해야 합니다.'
+            : progress.message;
+  const polymarketUrl = `https://polymarket.com/event/${marketMeta.slug || ACTIVE_CHAMPION_EVENT_SLUG}`;
 
   const applyMarketUpdate = (next: MarketUpdateResponse) => {
     writeStoredMarket(next.market);
     localStorage.setItem(META_STORAGE_KEY, JSON.stringify(next.meta));
     setMarket(next.market);
     setMarketMeta(next.meta);
-    setProgress(previous => ({
-      ...previous,
-      rows: rowsFromMarket(next.market, next.target, previous.rows),
-      message:
-        previous.phase === 'done'
-          ? next.changedTeams.length
-            ? `시장 갱신 · ${next.changedTeams.length}팀 변경 · 재보정 권장`
-            : '시장 갱신 · 가격 변동 없음'
-          : previous.message,
-    }));
-    setMarketFlash(true);
-    window.setTimeout(() => setMarketFlash(false), 1200);
-    const stamp = formatFetchedAt(next.meta.fetchedAt);
-    if (next.changedTeams.length) {
-      setMarketStatus(`${next.changedTeams.length}팀 변경 · ${stamp} KST`);
-    } else {
-      setMarketStatus(`변동 없음 · ${stamp} KST`);
-    }
-    if (!next.persisted) {
-      setMarketStatus(previous => `${previous} · 로컬만 반영`);
-    }
+    setProgress(previous => {
+      const rows = rowsFromMarket(next.market, next.target, previous.rows);
+      const issueCount = rows.filter(hasCalibrationIssue).length;
+      return {
+        ...previous,
+        rows,
+        message:
+          previous.phase === 'done'
+            ? issueCount
+              ? `시장 갱신 · 주의·초과 ${issueCount}팀`
+              : '시장 갱신 · 전 팀 허용오차 내'
+            : previous.message,
+      };
+    });
+    setMarketError('');
     onMarketUpdated?.(next.market);
   };
 
   const updateMarketClientSide = async (): Promise<MarketUpdateResponse> => {
-    const fetched = await fetchPolymarketEplChampion();
+    const fetched = await fetchPolymarketChampion();
     const merged = mergeMarketSnapshot(fetched.prices, market);
     const nextTarget = normalizeMarketProbabilities(merged, teams);
     const changedTeams = Object.keys(merged).filter(
@@ -400,7 +519,7 @@ export function CalibrationLab({
   const updateMarket = async () => {
     if (marketBusy || busy) return;
     setMarketBusy(true);
-    setMarketStatus('Polymarket에서 불러오는 중…');
+    setMarketError('');
     try {
       const response = await fetch('/api/update-market', { method: 'POST', headers: { 'X-Football-Local-Api': '1' } });
       if (response.ok) {
@@ -415,7 +534,7 @@ export function CalibrationLab({
         const fallback = await updateMarketClientSide();
         applyMarketUpdate(fallback);
       } catch (fallbackError) {
-        setMarketStatus((fallbackError as Error).message || (error as Error).message);
+        setMarketError((fallbackError as Error).message || (error as Error).message);
       }
     } finally {
       setMarketBusy(false);
@@ -450,6 +569,8 @@ export function CalibrationLab({
       });
       resultRef.current = payload;
       setHasResult(true);
+      const completedAt = typeof payload.createdAt === 'string' ? payload.createdAt : new Date().toISOString();
+      setCalibrationUpdatedAt(completedAt);
       const payloadRatings = (payload.ratings ?? {}) as Record<string, number>;
       if (Object.keys(payloadRatings).length === teams.length) {
         writeStoredRatings(payloadRatings);
@@ -508,7 +629,10 @@ export function CalibrationLab({
   const startLabel = progress.phase === 'done' || hasResult ? '처음부터 다시 보정' : '보정 시작';
 
   return (
-    <div className="lab">
+    <div
+      className="lab"
+      style={{ '--club-count': teams.length } as CSSProperties}
+    >
       <aside className="lab-rail">
         <div className="lab-brand">
           {onBack && (
@@ -516,18 +640,34 @@ export function CalibrationLab({
               ← 시뮬로
             </button>
           )}
-          <div className="wordmark">PL<span>∞</span></div>
+          <div className="wordmark">{activeLeague.ui.wordmark}<span>∞</span></div>
           <h1>시장 보정</h1>
         </div>
-        <div className="lab-phase">
+        <div className={`lab-phase is-${operationalTone}`}>
           <span className="lab-phase-label">상태</span>
-          <strong>{phaseLabel(progress)}</strong>
-          <p>{progress.message}</p>
+          <strong>{operationalStatus}</strong>
+          <p>{operationalDetail}</p>
         </div>
-        <div className={`lab-market-meta${marketFlash ? ' is-flash' : ''}`}>
+        <div className={`lab-market-meta${updateDatesDiffer ? ' is-diverged' : ''}`}>
           <span className="lab-phase-label">Polymarket</span>
-          <p className="lab-market-date">{marketFetchedLabel} KST</p>
-          {marketStatus && <p className="lab-market-status">{marketStatus}</p>}
+          <div className="lab-update-stamps">
+            <p>
+              <i className="market-stamp-dot" aria-hidden />
+              <span>시장</span>
+              <time dateTime={marketMeta.fetchedAt}>
+                <span className="stamp-date">{marketFetchedLabel.date}</span>
+                <span className="stamp-time">{marketFetchedLabel.time}</span>
+              </time>
+            </p>
+            <p>
+              <i className="calibration-stamp-dot" aria-hidden />
+              <span>보정</span>
+              <time dateTime={calibrationUpdatedAt}>
+                <span className="stamp-date">{calibrationUpdatedLabel.date}</span>
+                <span className="stamp-time">{calibrationUpdatedLabel.time}</span>
+              </time>
+            </p>
+          </div>
         </div>
         <div className="lab-rail-metrics">
           <div><span>MAE</span><b>{progress.mae === null ? '—' : `${(progress.mae * 100).toFixed(3)}pp`}</b></div>

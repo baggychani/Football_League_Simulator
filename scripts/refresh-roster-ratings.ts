@@ -3,7 +3,8 @@ import { teams } from '../src/data/teams';
 import { normalizeMarketProbabilities, ratingsFromLogMarket } from '../src/calibration/market';
 import { scoreModelDiagnostics } from '../src/calibration/diagnostics';
 import { IndependentPoissonModel } from '../src/simulation/score-model';
-import market from '../src/data/default-market.json';
+import { activeMarketSnapshot as market } from '../src/data/active-data';
+import { activeLeague } from '../src/data/league-catalog/active';
 import { fileURLToPath } from 'node:url';
 import { atomicWriteFile } from './local-api';
 
@@ -47,9 +48,9 @@ const payload = {
   ratings,
   teamDiagnostics: stubDiagnostics,
   teamsOutsideTolerance: teams.map(team => team.id),
-  method: `roster-refresh placeholder scale=${bestScale} — re-run python calibrate.py`,
+  method: `roster-refresh placeholder scale=${bestScale} — run npm run calibrate`,
   createdAt: new Date().toISOString(),
-  note: '2026/27 roster: Coventry / Ipswich / Hull replace Burnley / West Ham / Wolves. Ratings are temporary seeds until full calibration.',
+  note: `${activeLeague.competition.name} ${activeLeague.competition.season.id}: temporary ratings until full calibration.`,
 };
 
 await atomicWriteFile(

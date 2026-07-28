@@ -21,7 +21,7 @@ function Abbr({ team, colored = true }: { team: Team; colored?: boolean }) {
     <span
       className={`team-abbr${style?.backgroundColor ? ' chip' : ''}`}
       style={style}
-      title={team.name}
+      title={team.nameKo ?? team.name}
     >
       {team.abbr}
     </span>

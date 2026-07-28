@@ -1,6 +1,11 @@
 import type { RatingMap, Team } from '../domain/types';
 import type { DynamicStrengthState } from './dynamic-strength';
-import { baseRatings, effectiveRatings, noFormRatings } from './dynamic-strength';
+import {
+  baseRatings,
+  dynamicParameters,
+  effectiveRatings,
+  noFormRatings,
+} from './dynamic-strength';
 import { IndependentPoissonDistribution, modelParameters } from './score-model';
 
 export interface StrengthLayerSnapshot {
@@ -64,7 +69,7 @@ export function strengthDiagnostics(state: DynamicStrengthState) {
   return {
     base: summarize(values.map(value => value.base)),
     medium: summarize(values.map(value => value.medium)),
-    form: summarize(values.map(value => value.form)),
+    form: summarize(values.map(value => dynamicParameters.formWeight * value.form)),
     current: summarize(Object.values(effectiveRatings(state))),
   };
 }

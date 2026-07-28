@@ -3,8 +3,8 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { normalizeMarketProbabilities } from '../src/calibration/market';
 import {
-  EPL_CHAMPION_EVENT_SLUG,
-  fetchPolymarketEplChampion,
+  ACTIVE_CHAMPION_EVENT_SLUG,
+  fetchPolymarketChampion,
   mergeMarketSnapshot,
 } from '../src/calibration/polymarket';
 import { teams } from '../src/data/teams';
@@ -37,11 +37,11 @@ export async function updateMarketFromPolymarket(options?: {
   slug?: string;
   write?: boolean;
 }): Promise<MarketUpdateResult> {
-  const slug = options?.slug ?? EPL_CHAMPION_EVENT_SLUG;
+  const slug = options?.slug ?? ACTIVE_CHAMPION_EVENT_SLUG;
   const write = options?.write !== false;
   const run = async () => {
     const previous = validateMarketSnapshot(JSON.parse(await readFile(marketPath, 'utf8')));
-    const fetched = await fetchPolymarketEplChampion(slug);
+    const fetched = await fetchPolymarketChampion(slug);
     if (fetched.missingTeams.length) {
       console.warn(`Polymarket missing ${fetched.missingTeams.length} teams; previous prices were retained.`);
     }

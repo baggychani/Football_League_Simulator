@@ -1,31 +1,14 @@
 import { teams } from '../data/teams';
+import { activeLeague } from '../data/league-catalog/active';
 
-export const EPL_CHAMPION_EVENT_SLUG = 'epl-2027-champion-20260701200428749';
+export const ACTIVE_CHAMPION_EVENT_SLUG = activeLeague.market?.eventSlug ?? '';
+/** @deprecated Compatibility name for existing commands and saved metadata. */
+export const EPL_CHAMPION_EVENT_SLUG = ACTIVE_CHAMPION_EVENT_SLUG;
 export const POLYMARKET_GAMMA_API = 'https://gamma-api.polymarket.com';
 
 /** Polymarket groupItemTitle → simulator team id */
-export const polymarketTeamIds: Record<string, string> = {
-  Arsenal: 'arsenal',
-  'Aston Villa': 'aston-villa',
-  Bournemouth: 'bournemouth',
-  Brentford: 'brentford',
-  Brighton: 'brighton',
-  Chelsea: 'chelsea',
-  'Coventry City': 'coventry',
-  'Crystal Palace': 'crystal-palace',
-  Everton: 'everton',
-  Fulham: 'fulham',
-  'Hull City': 'hull',
-  'Ipswich Town': 'ipswich',
-  'Leeds United': 'leeds',
-  Liverpool: 'liverpool',
-  'Manchester City': 'man-city',
-  'Manchester United': 'man-united',
-  'Newcastle United': 'newcastle',
-  'Nottingham Forest': 'nottingham-forest',
-  Tottenham: 'tottenham',
-  Sunderland: 'sunderland',
-};
+export const polymarketTeamIds: Readonly<Record<string, string>> =
+  activeLeague.market?.teamTitleToClubId ?? {};
 
 interface GammaMarket {
   groupItemTitle?: string;
@@ -98,11 +81,16 @@ export function pricesFromGammaEvent(event: GammaEvent): Omit<PolymarketFetchRes
   };
 }
 
-export async function fetchPolymarketEplChampion(
-  slug = EPL_CHAMPION_EVENT_SLUG,
+export async function fetchPolymarketChampion(
+  slug = ACTIVE_CHAMPION_EVENT_SLUG,
   fetchImpl: typeof fetch = fetch,
   timeoutMs = 10_000,
 ): Promise<PolymarketFetchResult> {
+  if (!slug) {
+    throw new Error(
+      `${activeLeague.competition.id} has no configured Polymarket champion event.`,
+    );
+  }
   const url = `${POLYMARKET_GAMMA_API}/events?slug=${encodeURIComponent(slug)}`;
   let response: Response | null = null;
   let lastError: unknown = null;
@@ -142,6 +130,9 @@ export async function fetchPolymarketEplChampion(
     source: url,
   };
 }
+
+/** @deprecated Use the competition-neutral name. */
+export const fetchPolymarketEplChampion = fetchPolymarketChampion;
 
 /** Merge live Polymarket prices with an existing snapshot for teams not listed on the market. */
 export function mergeMarketSnapshot(

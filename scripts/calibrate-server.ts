@@ -84,7 +84,10 @@ const server = createServer(async (req, res) => {
     if (req.method === 'POST' && url.pathname === '/api/save-market') {
       requireLocalApiHeader(req);
       const body = validateMarketSavePayload(await readJsonBody(req));
-      const result = await persistMarketSnapshot({ market: body.market, meta: body.meta as unknown as Parameters<typeof persistMarketSnapshot>[0]['meta'] });
+      const result = await persistMarketSnapshot({
+        market: body.market,
+        meta: body.meta,
+      });
       sendJson(res, 200, {
         ok: true,
         persisted: true,

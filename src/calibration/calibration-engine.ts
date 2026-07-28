@@ -1,12 +1,15 @@
 import type { Fixture, RatingMap, Team } from '../domain/types';
-import { createStaticChampionSimulator } from '../simulation/season-simulator';
+import {
+  createStaticChampionSimulator,
+  type SeasonRules,
+} from '../simulation/season-simulator';
 import type { ScoreModel } from '../simulation/score-model';
 import { scoreModelDiagnostics, type ScoreModelDiagnostics } from './diagnostics';
 import { broydenUpdate, clampStep, regularizedLeastSquaresStep } from './linear-algebra';
 import { ratingsFromLogMarket } from './market';
 import {
+  calibrationHeadIds,
   calibrationObjective,
-  objectiveParameters,
   objectiveResidualVector,
   toleranceForTarget,
   validationIsAmbiguous,
@@ -113,6 +116,8 @@ export interface CalibrationOptions {
   onIteration?: (iteration: number, report: CalibrationReport) => void;
   onSeasonProgress?: (iteration: number, info: SeasonProgressInfo) => void;
   onPhase?: (phase: 'scale' | 'refine' | 'head' | 'final', detail: string) => void;
+  /** Competition-specific points and table ordering used by season samples. */
+  leagueRules?: Partial<SeasonRules>;
 }
 
 function emptyWins(teams: Team[]): RatingMap {
@@ -195,8 +200,14 @@ export function createCalibrationEvaluator(
   fixtures: Fixture[],
   target: RatingMap,
   model: ScoreModel,
+  leagueRules: Partial<SeasonRules> = {},
 ): CalibrationEvaluator {
-  const simulateChampion = createStaticChampionSimulator(teams, fixtures, model);
+  const simulateChampion = createStaticChampionSimulator(
+    teams,
+    fixtures,
+    model,
+    leagueRules,
+  );
   return async request => {
     const wins = emptyWins(teams);
     const seeds = request.seeds.length ? request.seeds : [1];
@@ -348,16 +359,17 @@ async function polishHead(
   diagnostics: OptimizerDiagnostics,
 ): Promise<{ ratings: RatingMap; report: CalibrationReport }> {
   const ids = teams.map(team => team.id);
-  const [first, second] =
-    target.arsenal !== undefined && target['man-city'] !== undefined
-      ? ['arsenal', 'man-city']
-      : [...ids].sort((a, b) => target[b] - target[a]).slice(0, 2);
+  const [first, second] = calibrationHeadIds(teams, target);
+  const teamName = Object.fromEntries(teams.map(team => [team.id, team.name]));
   const delta = options.finiteDifference ?? 0.01;
   const trust = options.headTrustRegion ?? 0.04;
   let currentRatings = ratings;
   let current = await evaluator({ ratings, seasons, seeds: trainingSeeds, signal: options.signal });
   for (let iteration = 0; iteration < (options.headIterations ?? 2); iteration++) {
-    options.onPhase?.('head', `Arsenal/City mass-split polish ${iteration + 1}`);
+    options.onPhase?.(
+      'head',
+      `${teamName[first]}/${teamName[second]} mass-split polish ${iteration + 1}`,
+    );
     const columns: number[][] = [];
     for (const [common, contrast] of [
       [delta, 0],
@@ -452,7 +464,8 @@ export async function calibrateRatings(
   );
   const finalBatchSeasons = Math.max(1, Math.round(options.finalBatchSeasons ?? 50_000));
   const startMode = options.startMode ?? 'hybrid';
-  const evaluator = options.evaluator ?? createCalibrationEvaluator(teams, fixtures, target, model);
+  const evaluator = options.evaluator
+    ?? createCalibrationEvaluator(teams, fixtures, target, model, options.leagueRules);
   const evaluate = (
     ratings: RatingMap,
     seasons: number,

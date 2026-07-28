@@ -69,7 +69,7 @@ function rowsFrom(
         error === null ? diagnostic?.withinTolerance ?? null : Math.abs(error) <= tolerance;
       return {
         id: team.id,
-        name: team.name,
+        name: team.nameKo ?? team.name,
         color: team.color,
         crestUrl: team.crestUrl ?? '',
         market: market[team.id] ?? 0,
@@ -93,7 +93,10 @@ async function runSeasonBank(
   onProgress: (done: number, wins: RatingMap) => void,
   signal?: AbortSignal,
 ): Promise<RatingMap> {
-  const workers = Math.max(seeds.length, workerCount());
+  const workers = Math.max(
+    1,
+    Math.min(seasons, Math.max(seeds.length, workerCount())),
+  );
   const reportEvery = Math.max(16, Math.floor(seasons / workers / 25));
   const seedTotals = seeds.map((_, seedIndex) =>
     Math.floor(seasons / seeds.length) + (seedIndex < seasons % seeds.length ? 1 : 0),
@@ -123,7 +126,14 @@ async function runSeasonBank(
     stop();
     throw new DOMException('Aborted', 'AbortError');
   }
-  const onAbort = () => stop();
+  let rejectAbort: ((reason: DOMException) => void) | null = null;
+  const abortPromise = new Promise<never>((_resolve, reject) => {
+    rejectAbort = reject;
+  });
+  const onAbort = () => {
+    stop();
+    rejectAbort?.(new DOMException('Aborted', 'AbortError'));
+  };
   signal?.addEventListener('abort', onAbort, { once: true });
 
   const emitMerged = (force = false) => {
@@ -137,7 +147,7 @@ async function runSeasonBank(
   };
 
   try {
-    await Promise.all(
+    const workersDone = Promise.all(
       pool.map(
         (worker, workerId) =>
           new Promise<void>((resolve, reject) => {
@@ -167,6 +177,8 @@ async function runSeasonBank(
           }),
       ),
     );
+    if (signal) await Promise.race([workersDone, abortPromise]);
+    else await workersDone;
     emitMerged(true);
   } finally {
     signal?.removeEventListener('abort', onAbort);

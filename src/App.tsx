@@ -1,16 +1,32 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { teams, teamById } from './data/teams';
-import initialRatings from './data/calibrated-ratings.json';
-import defaultMarket from './data/default-market.json';
+import { activeLeague } from './data/league-catalog/active';
+import {
+  formatCompetitionSeason,
+  regularSeasonRounds,
+} from './data/league-catalog/types';
+import {
+  activeMarketSnapshot,
+  activeRatings,
+} from './data/active-data';
 import { normalizeMarketProbabilities } from './calibration/market';
 import { readStoredMarket, readStoredRatings } from './calibration/market-storage';
 import { toStrengthIndices } from './simulation/strength-index';
-import type { ChampionHistoryPage, LeagueRow, RecordCategory, RecordPage, SeasonArchivePage, SimulationSnapshot } from './domain/types';
+import type { ChampionHistoryPage, LeagueRow, RecordCategory, RecordPage, SeasonArchivePage, SimulationSnapshot, TeamTitleSummary } from './domain/types';
 import { LeagueTable } from './components/LeagueTable';
 import { CalibrationLab } from './components/CalibrationLab';
 import { ModelGuide } from './components/ModelGuide';
 import { RecordBookPanel, recordPageLabel, renderChampionEntry, renderRecordPageEntry } from './components/RecordBookPanel';
-import { MatchScoreLine } from './components/MatchScoreLine';
+import { MatchScoreLine, TeamAbbrLabel } from './components/MatchScoreLine';
+import {
+  StrengthPulseChart,
+  type StrengthPlayback,
+  type StrengthSample,
+} from './components/StrengthPulseChart';
+import type {
+  SimulationWorkerRequest,
+  SimulationWorkerResponse,
+} from './simulation/worker-protocol';
 import './lab.css';
 
 const blankRows: LeagueRow[] = teams.map((team, index) => ({
@@ -27,14 +43,26 @@ const blankRows: LeagueRow[] = teams.map((team, index) => ({
 }));
 
 type View = 'sim' | 'lab';
-const speedOptions = [2, 5, 10, 38] as const;
-const formatSeason = (completedSeasons: number) => {
-  const firstYear = 2026 + completedSeasons;
-  return `${firstYear}/${String((firstYear + 1) % 100).padStart(2, '0')}`;
+type RightPage = 'strength' | 'records' | 'news';
+type ChampionResult = LeagueRow & {
+  margin: number;
+  seed: number;
+  selectedId: string;
 };
-const formatSeasonRound = (completedSeasons: number, round: number) => {
-  const firstYear = 2026 + completedSeasons;
-  const season = `${String(firstYear).slice(-2)}/${String(firstYear + 1).slice(-2)}`;
+type DisplayFrame = {
+  frame: number;
+  snapshot: SimulationSnapshot;
+  champion?: ChampionResult;
+};
+const roundsPerSeason = regularSeasonRounds(activeLeague.competition);
+const speedOptions = [...new Set([2, 5, 10, roundsPerSeason])];
+const formatSeason = (seasonNumber: number) =>
+  formatCompetitionSeason(activeLeague.competition, seasonNumber);
+const formatSeasonRound = (seasonNumber: number, round: number) => {
+  const season = formatSeason(seasonNumber)
+    .split('/')
+    .map(part => part.slice(-2))
+    .join('/');
   return round > 0 ? `${season} · ${round}R` : season;
 };
 const randomSeed = () => {
@@ -42,48 +70,205 @@ const randomSeed = () => {
   crypto.getRandomValues(value);
   return String(value[0] || 1);
 };
+const initialSnapshot = (): SimulationSnapshot => ({
+  season: 1,
+  completedSeasons: 0,
+  round: 0,
+  totalMatches: 0,
+  teams: [...teams],
+  table: blankRows.map(row => ({ ...row })),
+  recent: [],
+  recentChampions: [],
+  recordPreviews: {},
+  championshipLeaders: [],
+  archiveSeasonCount: 0,
+  recordsVersion: 0,
+});
+
+function strengthSampleFromFrame(frame: DisplayFrame): StrengthSample {
+  return {
+    frame: frame.frame,
+    tick: frame.snapshot.totalMatches,
+    season: frame.snapshot.season,
+    round: frame.snapshot.round,
+    absoluteRound: Math.max(
+      0,
+      (frame.snapshot.season - 1) * roundsPerSeason + frame.snapshot.round,
+    ),
+    values: { ...frame.snapshot.strengths },
+  };
+}
+
+function AnimatedTitleCount({ titles }: { titles: number }) {
+  const [transition, setTransition] = useState<{
+    current: number;
+    previous: number | null;
+    version: number;
+  }>({ current: titles, previous: null, version: 0 });
+
+  useEffect(() => {
+    setTransition(current => current.current === titles
+      ? current
+      : { current: titles, previous: current.current, version: current.version + 1 });
+    const timer = window.setTimeout(() => {
+      setTransition(current => ({ ...current, previous: null }));
+    }, 480);
+    return () => window.clearTimeout(timer);
+  }, [titles]);
+
+  return (
+    <span className="championship-count-transition" aria-label={`${titles}회`}>
+      <span className="championship-count-value" aria-hidden="true">
+        {transition.previous !== null ? (
+          <b className="championship-count is-leaving">{transition.previous}</b>
+        ) : null}
+        <b
+          className={`championship-count${transition.version ? ' is-entering' : ''}`}
+          key={transition.version}
+        >
+          {transition.current}
+        </b>
+      </span>
+      <span className="championship-count-unit" aria-hidden="true">회</span>
+    </span>
+  );
+}
+
+function ChampionshipLeaderboard({ leaders }: { leaders: TeamTitleSummary[] }) {
+  const rowNodes = useRef(new Map<string, HTMLDivElement>());
+  const previousPositions = useRef(new Map<string, DOMRect>());
+  const leaderSignature = leaders.map(({ teamId, titles }) => `${teamId}:${titles}`).join('|');
+
+  useLayoutEffect(() => {
+    const nextPositions = new Map<string, DOMRect>();
+    rowNodes.current.forEach((node, teamId) => {
+      if (node.isConnected) nextPositions.set(teamId, node.getBoundingClientRect());
+    });
+    nextPositions.forEach((next, teamId) => {
+      const previous = previousPositions.current.get(teamId);
+      const node = rowNodes.current.get(teamId);
+      const offset = previous ? previous.top - next.top : 0;
+      if (node && Math.abs(offset) > 1) {
+        node.animate(
+          [
+            { transform: `translateY(${offset}px)` },
+            { transform: 'translateY(0)' },
+          ],
+          { duration: 360, easing: 'cubic-bezier(.2,.8,.2,1)' },
+        );
+      }
+    });
+    previousPositions.current = nextPositions;
+  }, [leaderSignature]);
+
+  return leaders.map(({ teamId, titles }) => (
+    <div
+      className="championship-entry is-new"
+      key={teamId}
+      ref={node => {
+        if (node) rowNodes.current.set(teamId, node);
+        else rowNodes.current.delete(teamId);
+      }}
+    >
+      <span className="championship-team">
+        <i style={{ background: teamById[teamId].color }}>
+          <img
+            src={teamById[teamId].crestUrl}
+            alt=""
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
+          />
+        </i>
+        <span className="championship-team-name">
+          {teamById[teamId].nameKo ?? teamById[teamId].name}
+        </span>
+      </span>
+      <AnimatedTitleCount titles={titles} />
+    </div>
+  ));
+}
 
 export default function App() {
   const [view, setView] = useState<View>('sim');
-  const [selected, setSelected] = useState('sunderland');
+  const [selected, setSelected] = useState('');
   const [seed, setSeed] = useState(randomSeed);
   const [status, setStatus] = useState('idle');
-  const [snapshot, setSnapshot] = useState<SimulationSnapshot>({
-    season: 1,
-    completedSeasons: 0,
-    round: 0,
-    totalMatches: 0,
-    table: blankRows,
-    recent: [],
-    recentChampions: [],
-    recordPreviews: {},
-    championshipLeaders: [],
-    archiveSeasonCount: 0,
-    recordsVersion: 0,
-  });
-  const [champion, setChampion] = useState<any>(null);
+  const [snapshot, setSnapshot] = useState<SimulationSnapshot>(initialSnapshot);
+  const [champion, setChampion] = useState<ChampionResult | null>(null);
   const [guide, setGuide] = useState(false);
   const [speed, setSpeed] = useState<number>(1);
-  const [showAllRatings, setShowAllRatings] = useState(false);
+  const [rightPage, setRightPage] = useState<RightPage>('strength');
+  const [championshipOrder, setChampionshipOrder] = useState<string[]>([]);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [useFixedSeed, setUseFixedSeed] = useState(false);
   const [historyDialog, setHistoryDialog] = useState<{ target: RecordCategory | 'championHistory' | 'seasonArchive'; title: string; page?: RecordPage | ChampionHistoryPage | SeasonArchivePage } | null>(null);
-  const [marketRaw, setMarketRaw] = useState(() => readStoredMarket(defaultMarket as Record<string, number>));
+  const [marketRaw, setMarketRaw] = useState(() =>
+    readStoredMarket(activeMarketSnapshot as Record<string, number>)
+  );
   const [baseRatings, setBaseRatings] = useState(() =>
-    readStoredRatings((initialRatings.ratings as Record<string, number>) ?? {}),
+    readStoredRatings(activeRatings as Record<string, number>),
   );
   const worker = useRef<Worker | null>(null);
+  const selectedRef = useRef(selected);
+  const statusRef = useRef(status);
+  const speedRef = useRef(speed);
+  const displayFramesRef = useRef<DisplayFrame[]>([]);
+  const strengthSamplesRef = useRef<StrengthSample[]>([]);
+  const playbackRef = useRef<StrengthPlayback>({
+    fromFrame: 0,
+    toFrame: null,
+    progress: 0,
+  });
+  const sendWorker = (message: SimulationWorkerRequest) => {
+    worker.current?.postMessage(message);
+  };
+  const resetDisplayTimeline = (frame: DisplayFrame) => {
+    displayFramesRef.current = [frame];
+    strengthSamplesRef.current = [strengthSampleFromFrame(frame)];
+    playbackRef.current = {
+      fromFrame: frame.frame,
+      toFrame: null,
+      progress: 0,
+    };
+    setSnapshot(frame.snapshot);
+  };
+  const appendDisplayFrame = (frame: DisplayFrame) => {
+    const previous = displayFramesRef.current;
+    const last = previous.at(-1);
+    if (last?.frame === frame.frame) return;
+    const minimumFrame = playbackRef.current.fromFrame - 240;
+    displayFramesRef.current = [...previous, frame]
+      .filter(entry => entry.frame >= minimumFrame);
+    strengthSamplesRef.current = [...strengthSamplesRef.current, strengthSampleFromFrame(frame)]
+      .filter(entry => entry.frame >= minimumFrame);
+  };
+
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
+  useEffect(() => {
+    speedRef.current = speed;
+  }, [speed]);
+
+  useEffect(() => {
+    document.title = view === 'lab'
+      ? `${activeLeague.competition.name} ∞ · 시장 보정`
+      : `${activeLeague.competition.name} ∞`;
+  }, [view]);
 
   const syncMarketFromStorage = (
     nextMarket?: Record<string, number>,
     nextRatings?: Record<string, number>,
   ) => {
-    setMarketRaw(nextMarket ?? readStoredMarket(defaultMarket as Record<string, number>));
+    setMarketRaw(nextMarket ?? readStoredMarket(
+      activeMarketSnapshot as Record<string, number>,
+    ));
     if (nextRatings) {
       setBaseRatings(nextRatings);
       return;
     }
-    setBaseRatings(readStoredRatings((initialRatings.ratings as Record<string, number>) ?? {}));
+    setBaseRatings(readStoredRatings(activeRatings as Record<string, number>));
   };
 
   useEffect(() => {
@@ -96,41 +281,143 @@ export default function App() {
     }
     if (query.get('view') === 'lab') setView('lab');
     const w = new Worker(new URL('./simulation/simulation-worker.ts', import.meta.url), { type: 'module' });
-    w.onmessage = ({ data }) => {
-      if (data.snapshot) setSnapshot(data.snapshot);
+    w.onmessage = ({ data }: MessageEvent<SimulationWorkerResponse>) => {
       if (data.type === 'recordPage' || data.type === 'seasonArchivePage' || data.type === 'championHistoryPage') {
         setHistoryDialog(current => current ? { ...current, page: data.result } : current);
+        return;
+      }
+      if (data.type === 'reset') {
+        resetDisplayTimeline({ frame: data.displayFrame, snapshot: data.snapshot });
+        return;
+      }
+      if (data.type === 'snapshot') {
+        appendDisplayFrame({ frame: data.displayFrame, snapshot: data.snapshot });
+        return;
       }
       if (data.type === 'champion') {
-        setStatus('complete');
-        setChampion(data.champion);
-      } else if (data.type === 'snapshot') {
-        // In-flight snapshots must not overwrite an intentional pause.
-        setStatus(current => (current === 'paused' || current === 'complete' ? current : 'running'));
-      } else if (data.type === 'reset') setStatus('idle');
+        appendDisplayFrame({
+          frame: data.displayFrame,
+          snapshot: data.snapshot,
+          champion: { ...data.champion, selectedId: data.selectedId },
+        });
+      }
     };
     worker.current = w;
     return () => w.terminate();
   }, []);
 
+  useEffect(() => {
+    let frame = 0;
+    let previousTime = performance.now();
+
+    const advance = (now: number) => {
+      const elapsed = Math.max(0, now - previousTime);
+      previousTime = now;
+      const timeline = playbackRef.current;
+      const frames = displayFramesRef.current;
+
+      if (statusRef.current !== 'running') {
+        frame = requestAnimationFrame(advance);
+        return;
+      }
+
+      let index = frames.findIndex(entry => entry.frame === timeline.fromFrame);
+      if (index < 0 && frames.length) {
+        index = 0;
+        timeline.fromFrame = frames[0].frame;
+        timeline.progress = 0;
+      }
+      if (index < 0 || !frames[index + 1]) {
+        timeline.toFrame = null;
+        timeline.progress = 0;
+        frame = requestAnimationFrame(advance);
+        return;
+      }
+
+      let progress = timeline.progress + elapsed / (330 / Math.max(speedRef.current, 1));
+      while (progress >= 1 && frames[index + 1]) {
+        progress -= 1;
+        index += 1;
+        const displayed = frames[index];
+        timeline.fromFrame = displayed.frame;
+        setSnapshot(displayed.snapshot);
+
+        if (displayed.champion) {
+          timeline.progress = 0;
+          timeline.toFrame = null;
+          statusRef.current = 'complete';
+          setStatus('complete');
+          setChampion(displayed.champion);
+          frame = requestAnimationFrame(advance);
+          return;
+        }
+      }
+
+      const next = frames[index + 1];
+      if (!next) {
+        timeline.progress = 0;
+        timeline.toFrame = null;
+      } else {
+        timeline.progress = progress;
+        timeline.toFrame = next.frame;
+      }
+      frame = requestAnimationFrame(advance);
+    };
+
+    frame = requestAnimationFrame(advance);
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
+    selectedRef.current = selected;
+    sendWorker({ type: 'selected', selected });
+    if (!selected) setChampion(null);
+  }, [selected]);
+
+  const changeSelected = (nextSelected: string) => {
+    selectedRef.current = nextSelected;
+    setSelected(nextSelected);
+    setChampion(null);
+    sendWorker({ type: 'selected', selected: nextSelected });
+  };
+
+  useEffect(() => {
+    if (selected && !snapshot.teams.some(team => team.id === selected)) {
+      changeSelected('');
+    }
+  }, [selected, snapshot.teams]);
+
   const begin = () => {
     setChampion(null);
+    statusRef.current = 'running';
     setStatus('running');
+    resetDisplayTimeline({ frame: 0, snapshot: initialSnapshot() });
     const activeSeed = useFixedSeed ? Number(seed) || 1 : Number(randomSeed());
     setSeed(String(activeSeed));
-    worker.current?.postMessage({ type: 'start', selected, seed: activeSeed, speed });
+    sendWorker({
+      type: 'start',
+      selected,
+      seed: activeSeed,
+      speed,
+      ratings: baseRatings,
+    });
   };
   const pause = () => {
+    statusRef.current = 'paused';
     setStatus('paused');
-    worker.current?.postMessage({ type: 'pause' });
+    sendWorker({ type: 'pause' });
   };
   const resume = () => {
+    statusRef.current = 'running';
     setStatus('running');
-    worker.current?.postMessage({ type: 'resume' });
+    sendWorker({ type: 'resume' });
   };
   const reset = () => {
     setChampion(null);
-    worker.current?.postMessage({ type: 'reset' });
+    statusRef.current = 'idle';
+    setStatus('idle');
+    resetDisplayTimeline({ frame: 0, snapshot: initialSnapshot() });
+    sendWorker({ type: 'reset' });
   };
 
   useEffect(() => {
@@ -160,25 +447,60 @@ export default function App() {
   }, [status, view, guide, historyDialog, champion, selected, seed, speed, useFixedSeed]);
 
   const market = useMemo(() => normalizeMarketProbabilities(marketRaw, teams), [marketRaw]);
+  const rosterTeams = snapshot.teams.length ? snapshot.teams : teams;
   const selectedTeam = teamById[selected];
-  const strengths = snapshot.strengths ?? toStrengthIndices(teams, baseRatings);
-  const copyShare = () =>
-    navigator.clipboard.writeText(`${location.origin}${location.pathname}?team=${selected}&seed=${seed}`);
-  const sortedTeams = useMemo(
-    () => [...teams].sort((a, b) => (strengths[b.id] ?? 0) - (strengths[a.id] ?? 0)),
-    [strengths],
+  const strengths = useMemo(
+    () => snapshot.strengths ?? toStrengthIndices(teams, baseRatings),
+    [snapshot.strengths, baseRatings],
   );
-  const visibleRatings = showAllRatings ? sortedTeams : sortedTeams.slice(0, 8);
-  const changeSpeed = (nextSpeed: (typeof speedOptions)[number]) => {
+  const copyShare = () => {
+    const url = new URL(location.href);
+    url.search = '';
+    if (selected) url.searchParams.set('team', selected);
+    url.searchParams.set('seed', seed);
+    return navigator.clipboard.writeText(url.toString());
+  };
+  // Keep the strength-page roster ordered by stable market odds so rows do not
+  // reshuffle every time live strength ticks — only the numeric cells move.
+  const sortedTeams = useMemo(
+    () => [...rosterTeams].sort((a, b) => (market[b.id] ?? 0) - (market[a.id] ?? 0)),
+    [market, rosterTeams],
+  );
+  useEffect(() => {
+    const currentIds = snapshot.championshipLeaders.map(entry => entry.teamId);
+    setChampionshipOrder(previous => {
+      const next = [
+        ...previous.filter(teamId => currentIds.includes(teamId)),
+        ...currentIds.filter(teamId => !previous.includes(teamId)),
+      ];
+      return next.length === previous.length && next.every((teamId, index) => teamId === previous[index])
+        ? previous
+        : next;
+    });
+  }, [snapshot.championshipLeaders]);
+  const displayedChampionshipLeaders = useMemo(
+    () => [...snapshot.championshipLeaders].sort((left, right) => {
+      if (right.titles !== left.titles) return right.titles - left.titles;
+      const leftIndex = championshipOrder.indexOf(left.teamId);
+      const rightIndex = championshipOrder.indexOf(right.teamId);
+      return (leftIndex < 0 ? Number.MAX_SAFE_INTEGER : leftIndex)
+        - (rightIndex < 0 ? Number.MAX_SAFE_INTEGER : rightIndex);
+    }),
+    [snapshot.championshipLeaders, championshipOrder],
+  );
+  const countedSeasons = snapshot.completedSeasons
+    + (snapshot.round < roundsPerSeason && Object.values(snapshot.qualifications ?? {}).includes('champion') ? 1 : 0);
+  const changeSpeed = (nextSpeed: number) => {
     const actualSpeed = speed === nextSpeed ? 1 : nextSpeed;
+    speedRef.current = actualSpeed;
     setSpeed(actualSpeed);
-    worker.current?.postMessage({ type: 'speed', speed: actualSpeed });
+    sendWorker({ type: 'speed', speed: actualSpeed });
   };
   const openHistory = (target: RecordCategory | 'championHistory' | 'seasonArchive', title = recordPageLabel(target)) => {
     setHistoryDialog({ target, title });
-    if (target === 'championHistory') worker.current?.postMessage({ type: 'getChampionHistoryPage', offset: 0, limit: 20 });
-    else if (target === 'seasonArchive') worker.current?.postMessage({ type: 'getSeasonArchivePage', offset: 0, limit: 20 });
-    else worker.current?.postMessage({ type: 'getRecordPage', category: target, offset: 0, limit: 20 });
+    if (target === 'championHistory') sendWorker({ type: 'getChampionHistoryPage', offset: 0, limit: 20 });
+    else if (target === 'seasonArchive') sendWorker({ type: 'getSeasonArchivePage', offset: 0, limit: 20 });
+    else sendWorker({ type: 'getRecordPage', category: target, offset: 0, limit: 20 });
   };
 
   if (view === 'lab') {
@@ -199,41 +521,37 @@ export default function App() {
   }
 
   return (
-    <div className="app-shell">
-      <header className="app-header" aria-label="도구">
-        <div className="header-actions">
-          <button type="button" className="help" onClick={() => setGuide(true)} aria-label="모델 설명 열기">
-            ?
-          </button>
-          <button
-            type="button"
-            className="nav-lab"
-            onClick={() => {
-              setView('lab');
-              const url = new URL(location.href);
-              url.searchParams.set('view', 'lab');
-              history.replaceState(null, '', url);
-            }}
-          >
-            시장 보정
-          </button>
-        </div>
-      </header>
-
+    <div
+      className="app-shell"
+      style={{ '--club-count': rosterTeams.length } as CSSProperties}
+    >
       <div className="app-layout">
         <aside className="app-rail left">
           <div className="sim-brand wordmark">
-            PL<span>∞</span>
+            {activeLeague.ui.wordmark}<span>∞</span>
           </div>
-          <p className="rail-kicker">PREMIER LEAGUE</p>
-          <h1>무한 리그<br /><em>시뮬레이터</em></h1>
+          <p className="rail-kicker">{activeLeague.ui.kicker}</p>
+          <h1>
+            무한 리그<br />
+            <span className="sim-title-line">
+              <em>시뮬레이터</em>
+              <button type="button" className="rail-help" onClick={() => setGuide(true)} aria-label="모델 설명 열기" title="모델 설명">
+                ?
+              </button>
+            </span>
+          </h1>
 
           <label className="rail-field">
             <span>구단</span>
-            <select value={selected} onChange={event => setSelected(event.target.value)}>
-              {teams.map(team => (
+            <select
+              className={selected ? undefined : 'is-unselected'}
+              value={selected}
+              onChange={event => changeSelected(event.target.value)}
+            >
+              <option value="">선택하지 않음</option>
+              {rosterTeams.map(team => (
                 <option value={team.id} key={team.id}>
-                  {team.name}
+                  {team.nameKo ?? team.name}
                 </option>
               ))}
             </select>
@@ -303,17 +621,19 @@ export default function App() {
           <div className="rail-stats">
             <div>
               <span>선택</span>
-              <b>{selectedTeam.name}</b>
+              <b className={selectedTeam ? undefined : 'is-unselected'}>
+                {selectedTeam ? selectedTeam.nameKo ?? selectedTeam.name : '선택하지 않음'}
+              </b>
             </div>
             <div>
               <span>시즌</span>
               <b>
-                {formatSeason(snapshot.completedSeasons)}
+                {formatSeason(snapshot.season)}
               </b>
             </div>
             <div>
               <span>라운드</span>
-              <b>{snapshot.round}/38</b>
+              <b>{snapshot.round}/{roundsPerSeason}</b>
             </div>
             <div>
               <span>경과 시즌</span>
@@ -324,44 +644,32 @@ export default function App() {
               <b>{snapshot.totalMatches.toLocaleString()}</b>
             </div>
           </div>
+          <div className="rail-bottom">
+            <button
+              type="button"
+              className="rail-market"
+              onClick={() => {
+                if (status === 'running') pause();
+                setView('lab');
+                const url = new URL(location.href);
+                url.searchParams.set('view', 'lab');
+                history.replaceState(null, '', url);
+              }}
+            >
+              Polymarket 시장 보정 <span aria-hidden="true">↗</span>
+            </button>
+            <footer className="rail-credit">2026 Bae Gichan</footer>
+          </div>
         </aside>
 
         <main className="sim-main">
-          <aside className="side-insights">
-            <section className="rail-block ratings-block side-card">
-              <div className="rail-title">시장 확률 · 전력</div>
-              <div className="rail-ratings">
-                {visibleRatings.map(team => (
-                    <div className="rail-rating-row" key={team.id}>
-                      <i style={{ background: team.color }}>
-                        <img src={team.crestUrl} alt="" />
-                      </i>
-                      <span className="rating-abbr" title={team.name}>{team.abbr}</span>
-                      <em>{(market[team.id] * 100).toFixed(1)}%</em>
-                      <b className="pos">{strengths[team.id] ?? 50}</b>
-                    </div>
-                ))}
-              </div>
-              <button
-                type="button"
-                className="ratings-toggle"
-                onClick={() => setShowAllRatings(value => !value)}
-                aria-expanded={showAllRatings}
-              >
-                {showAllRatings ? '상위 8팀만 보기' : `전체 ${teams.length}팀 보기`}
-              </button>
-            </section>
-          </aside>
-
           <div className="recent-stack">
             <section className="recent-bento" aria-label="최근 경기">
-              <div className="rail-title">최근 경기 <span>{formatSeasonRound(snapshot.completedSeasons, snapshot.round)}</span></div>
+              <div className="rail-title">최근 경기 <span>{formatSeasonRound(snapshot.season, snapshot.round)}</span></div>
               <div className="recent-feed">
-                {snapshot.recent.length ? (
-                  snapshot.recent
-                    .slice()
-                    .reverse()
-                    .map((match, index) => (
+                {Array.from({ length: 10 }, (_, index) => {
+                  const match = snapshot.recent[snapshot.recent.length - 1 - index];
+                  return match ? (
                       <p key={`${match.season}-${match.round}-${match.homeId}-${index}`} className="rail-match">
                         <MatchScoreLine
                           homeId={match.homeId}
@@ -370,41 +678,173 @@ export default function App() {
                           awayGoals={match.awayGoals}
                         />
                       </p>
-                    ))
-                ) : (
-                  <p className="empty">시작 후 표시</p>
-                )}
+                    ) : (
+                      <p
+                        className="rail-match is-placeholder"
+                        key={`recent-placeholder-${index}`}
+                        aria-hidden="true"
+                      />
+                    );
+                })}
+                {snapshot.recent.length === 0 ? (
+                  <span className="recent-placeholder-label">시뮬레이션 후 표시</span>
+                ) : null}
+              </div>
+            </section>
+
+            <section className="rail-block movement-block side-card" aria-label="지난 시즌 승격 및 강등">
+              <div className="rail-title">
+                승격 · 강등
+                <span>
+                  {snapshot.previousSeasonMovements?.sourceSeasonLabel ?? '이전 시즌'}
+                </span>
+              </div>
+              <div className="movement-columns">
+                {([
+                  ['promotion', '▲', snapshot.previousSeasonMovements?.promotedTeamIds ?? []],
+                  ['relegation', '▼', snapshot.previousSeasonMovements?.relegatedTeamIds ?? []],
+                ] as const).map(([kind, label, teamIds]) => (
+                  <div className={`movement-column ${kind}`} key={kind}>
+                    <h3>{label}</h3>
+                    {teamIds.length
+                      ? teamIds.map(teamId => (
+                          <div className="movement-team" key={teamId}>
+                            <TeamAbbrLabel teamId={teamId} />
+                          </div>
+                        ))
+                      : Array.from({ length: 3 }, (_, index) => (
+                          <div className="movement-team is-empty" key={`${kind}-${index}`} aria-hidden>
+                            <span>—</span>
+                          </div>
+                        ))}
+                  </div>
+                ))}
               </div>
             </section>
 
             <section className="rail-block championship-block side-card">
-              <div className="rail-title">누적 우승 횟수 <span>{snapshot.completedSeasons}시즌</span></div>
+              <div className="rail-title">누적 우승 횟수 <span>{countedSeasons}시즌</span></div>
               <div className="championship-list">
-                {snapshot.championshipLeaders
-                  .map(({ teamId, titles }) => (
-                    <div key={teamId}>
-                      <span>{teamById[teamId].name}</span>
-                      <b>{titles}회</b>
-                    </div>
-                  ))}
-                {snapshot.completedSeasons === 0 && <p className="empty">시뮬레이션 후 표시</p>}
+                <ChampionshipLeaderboard leaders={displayedChampionshipLeaders} />
+                {snapshot.championshipLeaders.length === 0 && <p className="empty">시뮬레이션 후 표시</p>}
               </div>
             </section>
           </div>
 
           <section className="app-center">
-            <LeagueTable rows={snapshot.table} teams={teams} selectedId={selected} />
+            <LeagueTable
+              rows={snapshot.table}
+              teams={rosterTeams}
+              selectedId={selected}
+              qualifications={snapshot.qualifications}
+              qualificationRules={activeLeague.competition.qualification}
+              relegationPositions={
+                activeLeague.competition.relegation?.automatic?.positions ?? []
+              }
+            />
           </section>
-          <RecordBookPanel snapshot={snapshot} onOpen={openHistory} />
+          <section className="right-pages" aria-label="상세 페이지">
+            <div className="right-page-tabs" role="tablist" aria-label="오른쪽 페이지 선택">
+              <button
+                type="button"
+                role="tab"
+                id="right-tab-strength"
+                aria-selected={rightPage === 'strength'}
+                aria-controls="right-panel-strength"
+                className={rightPage === 'strength' ? 'active' : ''}
+                onClick={() => setRightPage('strength')}
+              >
+                전력
+              </button>
+              <button
+                type="button"
+                role="tab"
+                id="right-tab-records"
+                aria-selected={rightPage === 'records'}
+                aria-controls="right-panel-records"
+                className={rightPage === 'records' ? 'active' : ''}
+                onClick={() => setRightPage('records')}
+              >
+                기록
+              </button>
+              <button
+                type="button"
+                role="tab"
+                id="right-tab-news"
+                aria-selected={rightPage === 'news'}
+                aria-controls="right-panel-news"
+                className={rightPage === 'news' ? 'active' : ''}
+                onClick={() => setRightPage('news')}
+              >
+                뉴스
+              </button>
+            </div>
+            {rightPage === 'strength' ? (
+              <div
+                className="right-page-body strength-page"
+                id="right-panel-strength"
+                role="tabpanel"
+                aria-labelledby="right-tab-strength"
+              >
+                <section className="rail-block ratings-block side-card">
+                  <div className="rail-title">구단 전력</div>
+                  <div className="ratings-columns" aria-hidden>
+                    <div><span>구단</span><span>우승예측</span><span>전력</span></div>
+                    <div><span>구단</span><span>우승예측</span><span>전력</span></div>
+                  </div>
+                  <div className="rail-ratings">
+                    {sortedTeams.map(team => {
+                      const strength = strengths[team.id] ?? 50;
+                      const strengthBand = strength >= 60 ? 'high' : strength < 40 ? 'low' : 'normal';
+                      return (
+                        <div className="rail-rating-row" key={team.id}>
+                          <i style={{ background: team.color }}>
+                            <img src={team.crestUrl} alt="" loading="eager" decoding="async" fetchPriority="high" />
+                          </i>
+                          <span className="rating-name" title={team.name}>{team.nameKo ?? team.name}</span>
+                          <em>{((market[team.id] ?? 0) * 100).toFixed(1)}%</em>
+                          <b className={`rating-value ${strengthBand}`}>{strength}</b>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+                <StrengthPulseChart
+                  samplesRef={strengthSamplesRef}
+                  playbackRef={playbackRef}
+                  teams={rosterTeams}
+                  selectedId={selected}
+                  isRunning={status === 'running'}
+                  roundsPerSeason={roundsPerSeason}
+                />
+              </div>
+            ) : rightPage === 'records' ? (
+              <div
+                className="right-page-body records-page"
+                id="right-panel-records"
+                role="tabpanel"
+                aria-labelledby="right-tab-records"
+              >
+                <RecordBookPanel snapshot={snapshot} onOpen={openHistory} />
+              </div>
+            ) : (
+              <div
+                className="right-page-body news-page"
+                id="right-panel-news"
+                role="tabpanel"
+                aria-labelledby="right-tab-news"
+              />
+            )}
+          </section>
         </main>
       </div>
 
-      {champion && (
-        <div className="champion">
+      {champion && selected && champion.selectedId === selected && (
+        <div className="champion-overlay">
           <div>
             <p>시즌 결과</p>
             <h2>
-              {selectedTeam.name}
+              {selectedTeam ? selectedTeam.nameKo ?? selectedTeam.name : '선택하지 않음'}
               <br />
               <em>우승</em>
             </h2>
@@ -446,7 +886,7 @@ export default function App() {
               ? historyDialog.page.entries.map(renderRecordPageEntry)
               : historyDialog.target === 'championHistory'
                 ? (historyDialog.page as ChampionHistoryPage).entries.map(renderChampionEntry)
-                : (historyDialog.page as SeasonArchivePage).entries.map(entry => <div className="history-page-row" key={entry.season}><div><b>{entry.seasonLabel} · {teamById[entry.championId].name}</b><small>준우승 {teamById[entry.runnerUpId].name} · {entry.totalGoals}골 · 선택 팀 {entry.selectedPosition}위</small></div><em>+{entry.titleMargin}점</em></div>))}
+                : (historyDialog.page as SeasonArchivePage).entries.map(entry => <div className="history-page-row" key={entry.season}><div><b>{entry.seasonLabel} · {teamById[entry.championId].nameKo ?? teamById[entry.championId].name}</b><small>준우승 {teamById[entry.runnerUpId].nameKo ?? teamById[entry.runnerUpId].name} · {entry.totalGoals}골 · {entry.selectedPosition > 0 ? `선택 팀 ${entry.selectedPosition}위` : '선택 없음'}</small></div><em>+{entry.titleMargin}점</em></div>))}
           </div>
         </div>
       </div>}

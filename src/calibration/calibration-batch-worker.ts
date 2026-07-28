@@ -1,5 +1,6 @@
 /// <reference lib="webworker" />
 import { teams } from '../data/teams';
+import { activeLeague } from '../data/league-catalog/active';
 import { createDoubleRoundRobin } from '../domain/fixtures';
 import type { RatingMap } from '../domain/types';
 import { IndependentPoissonModel } from '../simulation/score-model';
@@ -8,7 +9,11 @@ import { createStaticChampionSimulator } from '../simulation/season-simulator';
 const ctx: DedicatedWorkerGlobalScope = self as unknown as DedicatedWorkerGlobalScope;
 const fixtures = createDoubleRoundRobin(teams.map(t => t.id));
 const model = new IndependentPoissonModel();
-const simulateChampion = createStaticChampionSimulator(teams, fixtures, model);
+const simulateChampion = createStaticChampionSimulator(teams, fixtures, model, {
+  points: activeLeague.competition.points,
+  tieBreakers: activeLeague.competition.tieBreakers,
+  decisivePlayoffs: activeLeague.competition.decisivePlayoffs,
+});
 
 ctx.onmessage = ({ data }) => {
   if (data.type !== 'batch') return;

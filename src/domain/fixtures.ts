@@ -1,7 +1,7 @@
 import type { Fixture } from './types';
 
-/** Circle method: every pair plays once home and once away; 38 rounds, 380 fixtures. */
-export function createDoubleRoundRobin(teamIds: string[]): Fixture[] {
+/** Circle method: every pair plays once home and once away. */
+export function createDoubleRoundRobin(teamIds: readonly string[]): Fixture[] {
   if (teamIds.length < 2 || teamIds.length % 2) throw new Error('An even number of at least two teams is required.');
   const rotating = [...teamIds]; const firstLeg: Fixture[] = []; const n = rotating.length;
   for (let round = 1; round < n; round++) {

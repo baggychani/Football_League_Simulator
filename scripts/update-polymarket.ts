@@ -1,5 +1,5 @@
 import { updateMarketFromPolymarket } from './market-update-core';
-import { EPL_CHAMPION_EVENT_SLUG } from '../src/calibration/polymarket';
+import { ACTIVE_CHAMPION_EVENT_SLUG } from '../src/calibration/polymarket';
 
 const dryRun = process.argv.includes('--dry-run');
 
@@ -10,7 +10,7 @@ function arg(name: string, fallback: string) {
   return index >= 0 ? process.argv[index + 1] ?? fallback : fallback;
 }
 
-const slug = arg('--slug', EPL_CHAMPION_EVENT_SLUG);
+const slug = arg('--slug', ACTIVE_CHAMPION_EVENT_SLUG);
 const result = await updateMarketFromPolymarket({ slug, write: !dryRun });
 
 console.log(`Polymarket · ${result.meta.title}`);

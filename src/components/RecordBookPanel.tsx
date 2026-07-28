@@ -173,7 +173,7 @@ export function renderRecordPageEntry(entry: RecordEntry) {
   );
 }
 export function renderChampionEntry(entry: ChampionEntry) {
-  return <div className="history-page-row" key={entry.season}><div><b>{entry.seasonLabel} · {teamById[entry.championId].name}</b><small>준우승 {teamById[entry.runnerUpId].name} · 선택 팀 {entry.selectedPosition}위 / {entry.selectedPoints}점</small></div><em>+{entry.titleMargin}점</em></div>;
+  return <div className="history-page-row" key={entry.season}><div><b>{entry.seasonLabel} · {teamById[entry.championId].nameKo ?? teamById[entry.championId].name}</b><small>준우승 {teamById[entry.runnerUpId].nameKo ?? teamById[entry.runnerUpId].name} · {entry.selectedPosition > 0 ? `선택 팀 ${entry.selectedPosition}위 / ${entry.selectedPoints}점` : '선택 없음'}</small></div><em>+{entry.titleMargin}점</em></div>;
 }
 
 export function RecordBookPanel({ snapshot, onOpen }: { snapshot: SimulationSnapshot; onOpen: (target: PageTarget, title: string) => void }) {

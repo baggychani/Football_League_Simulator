@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build and serve Premier League ∞ on a deliberately non-default local port."""
+"""Build and serve the football simulator on a deliberately non-default port."""
 from __future__ import annotations
 
 import argparse
@@ -9,8 +9,10 @@ import os
 import subprocess
 import threading
 import tempfile
+import time
 import uuid
 import webbrowser
+from datetime import datetime
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
@@ -31,8 +33,8 @@ WRITE_LOCK = threading.Lock()
 def stamped_ratings_name() -> str:
     from datetime import datetime, timezone
 
-    stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M-%S")
-    return f"calibrated-ratings_{stamp}.json"
+    stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M-%S-%f")[:-3]
+    return f"calibrated-ratings_{stamp}_{uuid.uuid4().hex[:8]}.json"
 
 
 def run_market_update() -> dict:
@@ -72,7 +74,13 @@ def validate_market(market: object) -> dict[str, float]:
         raise ValueError("Market must contain exactly the known team IDs.")
     values: dict[str, float] = {}
     for team_id, value in market.items():
-        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
+        if (
+            isinstance(value, bool)
+            or not isinstance(value, (int, float))
+            or not math.isfinite(value)
+            or value < 0
+            or value > 1
+        ):
             raise ValueError(f"Invalid market price for {team_id}.")
         values[team_id] = float(value)
     if sum(values.values()) <= 0:
@@ -93,8 +101,120 @@ def validate_calibration(payload: object) -> dict:
         raise ValueError("Ratings must contain exactly the known team IDs.")
     if any(isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) for value in ratings.values()):
         raise ValueError("Ratings must be finite numbers.")
-    if not isinstance(payload.get("teamDiagnostics"), dict):
-        raise ValueError("Missing team calibration diagnostics.")
+    diagnostics = payload.get("teamDiagnostics")
+    if not isinstance(diagnostics, dict) or set(diagnostics) != expected_ids:
+        raise ValueError("Team diagnostics must contain exactly the known team IDs.")
+    for team_id, item in diagnostics.items():
+        if not isinstance(item, dict):
+            raise ValueError(f"teamDiagnostics.{team_id} must be an object.")
+        for field in (
+            "target",
+            "simulated",
+            "residual",
+            "tolerance",
+            "normalizedResidual",
+            "standardError",
+        ):
+            value = item.get(field)
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+                raise ValueError(f"teamDiagnostics.{team_id}.{field} must be finite.")
+        interval = item.get("confidenceInterval95")
+        if (
+            not isinstance(interval, dict)
+            or isinstance(interval.get("low"), bool)
+            or not isinstance(interval.get("low"), (int, float))
+            or not math.isfinite(interval["low"])
+            or isinstance(interval.get("high"), bool)
+            or not isinstance(interval.get("high"), (int, float))
+            or not math.isfinite(interval["high"])
+            or interval["low"] < 0
+            or interval["high"] > 1
+            or interval["low"] > interval["high"]
+        ):
+            raise ValueError(
+                f"teamDiagnostics.{team_id}.confidenceInterval95 is invalid."
+            )
+        residual = item["residual"]
+        tolerance = item["tolerance"]
+        simulated = item["simulated"]
+        target = item["target"]
+        if (
+            target < 0
+            or target > 1
+            or simulated < 0
+            or simulated > 1
+            or tolerance <= 0
+            or item["standardError"] < 0
+            or not isinstance(item.get("withinTolerance"), bool)
+            or abs(residual - (simulated - target)) > 1e-10
+            or abs(item["normalizedResidual"] - residual / tolerance) > 1e-10
+            or item["withinTolerance"] != (abs(residual) <= tolerance + 1e-12)
+            or simulated < interval["low"] - 1e-12
+            or simulated > interval["high"] + 1e-12
+        ):
+            raise ValueError(f"teamDiagnostics.{team_id} has invalid status fields.")
+    normalized_targets = payload.get("normalizedTargets")
+    if normalized_targets is not None:
+        if not isinstance(normalized_targets, dict) or set(normalized_targets) != expected_ids:
+            raise ValueError("Normalized targets must contain exactly the known team IDs.")
+        if any(
+            isinstance(value, bool)
+            or not isinstance(value, (int, float))
+            or not math.isfinite(value)
+            or value < 0
+            or value > 1
+            for value in normalized_targets.values()
+        ):
+            raise ValueError("Normalized targets must be probabilities.")
+        if abs(sum(normalized_targets.values()) - 1) > 1e-8:
+            raise ValueError("Normalized targets must sum to one.")
+    probabilities = payload.get("simulatedProbability")
+    if not isinstance(probabilities, dict) or set(probabilities) != expected_ids:
+        raise ValueError("Simulated probabilities must contain exactly the known team IDs.")
+    if any(
+        isinstance(value, bool)
+        or not isinstance(value, (int, float))
+        or not math.isfinite(value)
+        or value < 0
+        or value > 1
+        for value in probabilities.values()
+    ):
+        raise ValueError("Simulated probabilities must be between zero and one.")
+    if abs(sum(probabilities.values()) - 1) > 1e-8:
+        raise ValueError("Simulated probabilities must sum to one.")
+    for team_id, item in diagnostics.items():
+        if (
+            abs(item["simulated"] - probabilities[team_id]) > 1e-10
+            or (
+                normalized_targets is not None
+                and abs(item["target"] - normalized_targets[team_id]) > 1e-10
+            )
+        ):
+            raise ValueError(
+                f"teamDiagnostics.{team_id} disagrees with probability maps."
+            )
+    outside = payload.get("teamsOutsideTolerance")
+    if (
+        not isinstance(outside, list)
+        or any(not isinstance(item, str) for item in outside)
+        or len(outside) != len(set(outside))
+        or not set(outside) <= expected_ids
+    ):
+        raise ValueError("teamsOutsideTolerance must be an array of strings.")
+    diagnostic_outside = {
+        team_id
+        for team_id, item in diagnostics.items()
+        if item["withinTolerance"] is False
+    }
+    if set(outside) != diagnostic_outside:
+        raise ValueError("teamsOutsideTolerance must match teamDiagnostics status.")
+    created_at = payload.get("createdAt")
+    if not isinstance(created_at, str):
+        raise ValueError("createdAt must be a valid timestamp.")
+    try:
+        datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+    except ValueError as error:
+        raise ValueError("createdAt must be a valid timestamp.") from error
     return payload
 
 
@@ -108,6 +228,29 @@ def validate_meta(meta: object) -> dict:
         value = meta.get(field)
         if not isinstance(value, list) or any(not isinstance(item, str) for item in value):
             raise ValueError(f"meta.{field} must be an array of strings.")
+        if len(value) != len(set(value)):
+            raise ValueError(f"meta.{field} must not contain duplicates.")
+    try:
+        datetime.fromisoformat(meta["fetchedAt"].replace("Z", "+00:00"))
+    except ValueError as error:
+        raise ValueError("meta.fetchedAt must be a valid timestamp.") from error
+    if urlparse(meta["source"]).scheme != "https":
+        raise ValueError("meta.source must be an HTTPS URL.")
+
+    current_meta = json.loads(META.read_text(encoding="utf-8"))
+    expected_slug = current_meta.get("slug")
+    if expected_slug and meta["slug"] != expected_slug:
+        raise ValueError("meta.slug does not match the active market provider.")
+
+    expected_ids = set(json.loads(MARKET.read_text(encoding="utf-8")).keys())
+    matched = set(meta["matchedTeams"])
+    missing = set(meta["missingTeams"])
+    if matched & missing or matched | missing != expected_ids:
+        raise ValueError(
+            "meta.matchedTeams and meta.missingTeams must partition the active roster."
+        )
+    if not set(meta["changedTeams"]) <= expected_ids:
+        raise ValueError("meta.changedTeams contains an unknown team ID.")
     return meta
 
 
@@ -119,7 +262,15 @@ def atomic_write(path: Path, data: bytes) -> None:
             handle.write(data)
             handle.flush()
             os.fsync(handle.fileno())
-        os.replace(temporary, path)
+        for attempt in range(8):
+            try:
+                os.replace(temporary, path)
+                temporary = None
+                break
+            except PermissionError:
+                if attempt == 7:
+                    raise
+                time.sleep((attempt + 1) * 0.04)
     finally:
         if temporary is not None:
             temporary.unlink(missing_ok=True)
@@ -161,7 +312,8 @@ class SpaHandler(SimpleHTTPRequestHandler):
 
         if path == "/api/update-market":
             try:
-                payload = json.dumps(run_market_update())
+                with WRITE_LOCK:
+                    payload = json.dumps(run_market_update())
             except subprocess.TimeoutExpired:
                 self.send_json_error(504, "Market update timed out.")
                 return
@@ -176,9 +328,16 @@ class SpaHandler(SimpleHTTPRequestHandler):
             try:
                 market = validate_market(body["market"])
                 meta = validate_meta(body["meta"])
-                total = sum(float(value) for value in market.values())
-                target = {team_id: float(value) / total for team_id, value in market.items()}
                 with WRITE_LOCK:
+                    previous = json.loads(MARKET.read_text(encoding="utf-8"))
+                    changed_teams = [
+                        team_id
+                        for team_id, value in market.items()
+                        if abs(value - float(previous.get(team_id, 0))) > 1e-6
+                    ]
+                    meta = {**meta, "changedTeams": changed_teams}
+                    total = sum(float(value) for value in market.values())
+                    target = {team_id: float(value) / total for team_id, value in market.items()}
                     atomic_write(MARKET, (json.dumps(market, indent=2) + "\n").encode("utf-8"))
                     atomic_write(META, (json.dumps(meta, indent=2) + "\n").encode("utf-8"))
                 response = {
@@ -187,7 +346,7 @@ class SpaHandler(SimpleHTTPRequestHandler):
                     "market": market,
                     "target": target,
                     "meta": meta,
-                    "changedTeams": meta.get("changedTeams", []),
+                    "changedTeams": changed_teams,
                 }
             except Exception as error:
                 self.send_json_error(400, str(error))
@@ -258,7 +417,7 @@ def main() -> None:
         raise SystemExit("dist/ is missing. Run without --skip-build first.")
     server = ThreadingHTTPServer(("127.0.0.1", args.port), SpaHandler)
     url = f"http://127.0.0.1:{args.port}"
-    print(f"\nPremier League ∞ is live: {url}")
+    print(f"\nFootball simulator is live: {url}")
     print(f"Calibration lab: {url}/calibrate.html")
     print("Press Ctrl+C to stop.\n")
     if not args.no_browser:

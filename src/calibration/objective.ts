@@ -65,8 +65,8 @@ export function huber(value: number, delta = objectiveParameters.huberDelta): nu
 }
 
 export function calibrationHeadIds(teams: Team[], target: RatingMap): [string, string] {
-  if (target.arsenal !== undefined && target['man-city'] !== undefined) return ['arsenal', 'man-city'];
   const ordered = [...teams].sort((a, b) => target[b.id] - target[a.id] || a.id.localeCompare(b.id));
+  if (ordered.length < 2) throw new Error('Calibration requires at least two teams.');
   return [ordered[0].id, ordered[1].id];
 }
 

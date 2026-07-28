@@ -22,8 +22,8 @@ function localApiPlugin(): Plugin {
     name: 'football-local-api',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
+        const url = req.url?.split('?')[0] ?? '';
         try {
-          const url = req.url?.split('?')[0] ?? '';
           if (req.method === 'POST' && url === '/api/update-market') {
             requireLocalApiHeader(req);
             const result = await updateMarketFromPolymarket({ write: true });

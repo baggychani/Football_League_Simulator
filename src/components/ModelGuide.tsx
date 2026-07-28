@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import marketSnapshot from '../data/default-market.json';
+import { activeMarketSnapshot as marketSnapshot } from '../data/active-data';
+import { activeLeague } from '../data/league-catalog/active';
+import { regularSeasonRounds } from '../data/league-catalog/types';
+import { teams } from '../data/teams';
 
 const pages = [
   { id: 'overview', number: '01', label: '전체 흐름', hint: '시장이 시즌이 되는 과정' },
@@ -12,8 +15,21 @@ const pages = [
 ] as const;
 
 const rawMarketTotal = Object.values(marketSnapshot).reduce((sum, value) => sum + value, 0);
-const arsenalRaw = marketSnapshot.arsenal;
-const cityRaw = marketSnapshot['man-city'];
+const marketByTeam = marketSnapshot as Record<string, number>;
+const [firstExampleTeam, secondExampleTeam] = [...teams]
+  .sort((left, right) => marketByTeam[right.id] - marketByTeam[left.id])
+  .slice(0, 2);
+const firstExampleRaw = marketByTeam[firstExampleTeam.id];
+const secondExampleRaw = marketByTeam[secondExampleTeam.id];
+const roundsPerSeason = regularSeasonRounds(activeLeague.competition);
+const tierOneNames = teams
+  .filter(team => (team.structuralTier ?? 0) >= 1)
+  .map(team => team.nameKo ?? team.name)
+  .join(' · ');
+const tierTwoNames = teams
+  .filter(team => (team.structuralTier ?? 0) > 0 && (team.structuralTier ?? 0) < 1)
+  .map(team => team.nameKo ?? team.name)
+  .join(' · ');
 const percent = (value: number, digits = 1) => `${(100 * value).toFixed(digits)}%`;
 
 function Formula({
@@ -88,7 +104,7 @@ function OverviewPage() {
           <span>1</span>
           <div>
             <b>시장 가격을 읽습니다</b>
-            <p>20개 팀의 EPL 우승 Yes 가격을 하나의 스냅샷으로 모읍니다.</p>
+            <p>{teams.length}개 팀의 {activeLeague.competition.nameKo} 우승 Yes 가격을 하나의 스냅샷으로 모읍니다.</p>
           </div>
         </li>
         <li>
@@ -102,7 +118,7 @@ function OverviewPage() {
           <span>3</span>
           <div>
             <b>우승확률을 재현하는 기반 전력 B를 찾습니다</b>
-            <p>38경기 시즌을 반복해 돌리고, 모의 우승 비율이 시장 목표에 가까워지도록 B를 조정합니다.</p>
+            <p>{roundsPerSeason}경기 시즌을 반복해 돌리고, 모의 우승 비율이 시장 목표에 가까워지도록 B를 조정합니다.</p>
           </div>
         </li>
         <li>
@@ -148,7 +164,7 @@ function MarketPage() {
       <section className="guide-explainer">
         <h4>1. 각 팀의 Yes 가격을 수집합니다</h4>
         <p>
-          Polymarket의 EPL 우승 이벤트에서 활성 상태인 팀별 시장을 읽고, 이름을 시뮬레이터의
+          Polymarket의 {activeLeague.competition.nameKo} 우승 이벤트에서 활성 상태인 팀별 시장을 읽고, 이름을 시뮬레이터의
           팀 ID와 연결합니다. 시장에 일시적으로 빠진 팀이 있으면 0으로 없애지 않고 직전 저장
           스냅샷의 값을 보완해 사용합니다.
         </p>
@@ -174,20 +190,20 @@ function MarketPage() {
         <div className="guide-worked-example">
           <p className="guide-example-label">현재 스냅샷으로 보는 실제 예</p>
           <div>
-            <span>아스널 원시 가격</span>
-            <b>{percent(arsenalRaw)}</b>
+            <span>{firstExampleTeam.nameKo ?? firstExampleTeam.name} 원시 가격</span>
+            <b>{percent(firstExampleRaw)}</b>
           </div>
           <div>
             <span>전체 팀 원시 가격 합</span>
             <b>{percent(rawMarketTotal, 2)}</b>
           </div>
           <div className="result">
-            <span>정규화된 아스널 목표</span>
-            <b>{percent(arsenalRaw / rawMarketTotal, 2)}</b>
+            <span>정규화된 {firstExampleTeam.nameKo ?? firstExampleTeam.name} 목표</span>
+            <b>{percent(firstExampleRaw / rawMarketTotal, 2)}</b>
           </div>
           <small>
-            맨시티도 같은 방식으로 {percent(cityRaw)} ÷ {percent(rawMarketTotal, 2)} ={' '}
-            {percent(cityRaw / rawMarketTotal, 2)}가 됩니다.
+            {secondExampleTeam.nameKo ?? secondExampleTeam.name}도 같은 방식으로 {percent(secondExampleRaw)} ÷ {percent(rawMarketTotal, 2)} ={' '}
+            {percent(secondExampleRaw / rawMarketTotal, 2)}가 됩니다.
           </small>
         </div>
       </section>
@@ -211,7 +227,7 @@ function MarketPage() {
       <section className="guide-explainer">
         <h4>4. 시즌을 반복하며 B를 역보정합니다</h4>
         <p>
-          후보 B로 정규 38경기 일정을 수천~수십만 시즌 재생합니다. 팀 i의 모의 우승 비율{' '}
+          후보 B로 정규 {roundsPerSeason}경기 일정을 수천~수십만 시즌 재생합니다. 팀 i의 모의 우승 비율{' '}
           <code>p̂ᵢ</code>와 시장 목표 <code>pᵢ</code>의 차이를 보고 B를 조금 움직인 뒤 다시
           시뮬레이션합니다. 이 보정 단계에서는 B의 의미를 깨끗하게 맞추기 위해 C와 F, 시즌 간
           동적 갱신을 끄고 한 시즌 내내 같은 B를 사용합니다.
@@ -229,8 +245,8 @@ function MarketPage() {
       </section>
 
       <Callout title="왜 가격을 단순히 0–100으로 환산하지 않나요?" tone="important">
-        우승은 20팀이 공유하는 비선형 결과입니다. 강팀 한 곳의 B를 높이면 그 팀의 우승확률만
-        오르는 것이 아니라 다른 19팀의 확률이 함께 내려갑니다. 따라서 전체 일정과 경기 생성
+        우승은 {teams.length}팀이 공유하는 비선형 결과입니다. 강팀 한 곳의 B를 높이면 그 팀의 우승확률만
+        오르는 것이 아니라 다른 {teams.length - 1}팀의 확률이 함께 내려갑니다. 따라서 전체 일정과 경기 생성
         규칙을 통과한 뒤 시장 분포가 재현되는 B를 찾아야 합니다.
       </Callout>
     </>
@@ -385,7 +401,7 @@ function SeasonsPage() {
   return (
     <>
       <SectionTitle kicker="시즌이 끝난 뒤" title={<>반짝 돌풍과 진짜 체질 변화를 구분하는 법</>}>
-        38경기에서 쌓인 충격을 평균내고, 과거 시즌과 같은 방향이 반복되었는지 확인한 뒤 B와 C를
+        {roundsPerSeason}경기에서 쌓인 충격을 평균내고, 과거 시즌과 같은 방향이 반복되었는지 확인한 뒤 B와 C를
         서로 다른 속도로 갱신합니다.
       </SectionTitle>
 
@@ -427,26 +443,26 @@ function SeasonsPage() {
       </section>
 
       <section className="guide-explainer">
-        <h4>4. 티어는 경기 보너스가 아니라 구조적 회복력입니다</h4>
+        <h4>4. 기존 티어는 여러 구조 축의 출발값으로만 사용합니다</h4>
         <div className="guide-tier-list">
-          <div><span>1티어</span><p>맨시티 · 리버풀 · 첼시 · 맨유 · 아스널</p></div>
-          <div><span>2티어</span><p>토트넘 · 뉴캐슬 · 아스톤 빌라</p></div>
+          <div><span>1티어</span><p>{tierOneNames}</p></div>
+          <div><span>2티어</span><p>{tierTwoNames}</p></div>
           <div><span>0티어</span><p>그 밖의 모든 팀</p></div>
         </div>
         <p>
-          티어는 경기 직전 R에 더해지지 않고 승리확률이나 이변 지수에도 직접 들어가지 않습니다.
-          나쁜 중기 상태가 얼마나 오래 남는지, 장기 B가 초기 기반 아래로 떨어졌을 때 얼마나
-          부드럽게 복원되는지에만 관여합니다.
+          카탈로그의 티어는 역사, 자원, 최근 명성, 조직 안정성의 초기값으로 분해됩니다.
+          이 구조 상태는 경기 직전 R에 더해지지 않고, 나쁜 중기 상태의 지속과 장기 전력의
+          복원 방향을 조절합니다. 조직 건강은 강등 같은 충격을 받은 뒤 별도로 회복합니다.
         </p>
       </section>
 
       <section className="guide-explainer">
-        <h4>5. 0티어 팀도 획득 지위 E를 만들 수 있습니다</h4>
+        <h4>5. 신흥 강팀과 몰락한 명문은 서로 다른 경로로 바뀝니다</h4>
         <p>
-          기대 이상의 시즌이 여러 해 이어지면 양의 장기 런이 쌓이고, 일관성이 확인될 때 획득
-          지위 E가 증가합니다. 반대로 침체가 이어지거나 시간이 지나면 줄어듭니다. 구조적
-          지원에는 <code>clip(티어 + E, 0, 1)</code>가 쓰이므로 신흥 강팀도 점차 비슷한
-          회복력을 얻을 수 있습니다.
+          예상 순위보다 좋은 시즌, 우승, 유럽 진출, 승격은 자원과 명성을 조금씩 올립니다.
+          강등은 자원·명성·조직 건강을 함께 훼손하지만 역사는 훨씬 느리게 변합니다. 장기 B는
+          고정된 초기값 아래에서만 올라가는 대신, 이 구조 상태가 만든 목표를 향해 위아래
+          양방향으로 천천히 복원됩니다.
         </p>
       </section>
 
@@ -579,7 +595,7 @@ function ReadingPage() {
       <section className="guide-explainer">
         <h4>능력치 0–100은 중립 구장 기대 결과 지수입니다</h4>
         <Formula label="화면 능력치">
-          100 × 다른 19팀 상대 평균 [P(승) + 0.5P(무)]
+          100 × 다른 {teams.length - 1}팀 상대 평균 [P(승) + 0.5P(무)]
         </Formula>
         <p>
           각 팀을 다른 모든 팀과 중립 구장에서 한 번씩 붙인다고 가정합니다. 50은 리그

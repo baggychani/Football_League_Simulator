@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { teams } from '../src/data/teams';
+import { activeLeague } from '../src/data/league-catalog/active';
 import { createDoubleRoundRobin } from '../src/domain/fixtures';
 import { calibrateRatings } from '../src/calibration/calibration-engine';
 import { initialRatings, normalizeMarketProbabilities } from '../src/calibration/market';
@@ -9,6 +10,11 @@ const raw = JSON.parse(await readFile(new URL('../src/data/default-market.json',
 const target = normalizeMarketProbabilities(raw, teams);
 const fixtures = createDoubleRoundRobin(teams.map(t => t.id));
 const report = await calibrateRatings(teams, fixtures, target, initialRatings(target), new IndependentPoissonModel(), {
+  leagueRules: {
+    points: activeLeague.competition.points,
+    tieBreakers: activeLeague.competition.tieBreakers,
+    decisivePlayoffs: activeLeague.competition.decisivePlayoffs,
+  },
   seasons: 500,
   coarseSeasons: 250,
   jacobianSeasons: 250,
@@ -18,7 +24,10 @@ const report = await calibrateRatings(teams, fixtures, target, initialRatings(ta
   iterations: 2,
   seed: 20260722,
 });
-const watch = ['arsenal', 'man-city', 'newcastle', 'bournemouth', 'aston-villa'].map(id => ({
+const watchIds = Object.keys(target)
+  .sort((left, right) => target[right] - target[left])
+  .slice(0, 5);
+const watch = watchIds.map(id => ({
   id,
   target: +(target[id] * 100).toFixed(3),
   sim: +(report.simulated[id] * 100).toFixed(3),
@@ -31,7 +40,7 @@ console.log(
       maePp: +(report.mae * 100).toFixed(2),
       maxPp: +(report.maxError * 100).toFixed(2),
       weightedMaePp: +((report.weightedMae ?? 0) * 100).toFixed(2),
-      villaNewcastleGap: +(report.ratings['aston-villa'] - report.ratings.newcastle).toFixed(3),
+      leadingPairGap: +(report.ratings[watchIds[0]] - report.ratings[watchIds[1]]).toFixed(3),
       watch,
     },
     null,

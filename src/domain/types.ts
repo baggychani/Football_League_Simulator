@@ -1,17 +1,42 @@
 export interface Team {
   id: string;
   name: string;
+  nameKo?: string;
   abbr: string;
   color: string;
   secondaryColor: string;
   crestUrl?: string;
+  /**
+   * Long-run institutional support used by the dynamic-strength model.
+   * It is data, not a club-id special case: 1 is the strongest protected tier,
+   * values between 0 and 1 are partial support, and 0 means no protection.
+   */
+  structuralTier?: number;
 }
+export interface PointsRules {
+  win: number;
+  draw: number;
+  loss: number;
+}
+export type TableTieBreaker =
+  | 'headToHeadPoints'
+  | 'headToHeadGoalDifference'
+  | 'headToHeadAwayGoals'
+  | 'goalDifference'
+  | 'goalsFor'
+  | 'wins';
 export type RatingMap = Record<string, number>;
 export interface Fixture { homeId: string; awayId: string; round: number }
 export interface MatchScore { homeGoals: number; awayGoals: number; lambdaHome: number; lambdaAway: number }
 export interface PlayedMatch extends Fixture, MatchScore { season: number }
 export interface TeamSeasonState { teamId: string; played: number; wins: number; draws: number; losses: number; goalsFor: number; goalsAgainst: number; goalDifference: number; points: number }
 export interface LeagueRow extends TeamSeasonState { position: number }
+export type QualificationStatus = 'champion' | 'champions' | 'europa' | 'relegated';
+export interface QualificationRules {
+  championPosition: number;
+  championsLeaguePositions: readonly number[];
+  europaLeaguePositions: readonly number[];
+}
 export interface SeasonResult { table: LeagueRow[]; matches: PlayedMatch[]; championId: string; fixtures: Fixture[] }
 export type Speed = '1' | '5' | '10' | '100' | '1000' | 'max';
 export type RecordCategory =
@@ -95,9 +120,40 @@ export type RecordBook = Partial<Record<RecordCategory, RecordLeaderboard>>;
 export interface ChampionEntry { season: number; seasonLabel: string; championId: string; runnerUpId: string; championPoints: number; runnerUpPoints: number; titleMargin: number; selectedPosition: number; selectedPoints: number }
 export interface SeasonArchiveEntry extends ChampionEntry { lastPlaceTeamId: string; lastPlacePoints: number; totalGoals: number; totalDraws: number; homeWins: number; awayWins: number; highestScoringTeamId: string; bestDefenceTeamId: string; finalTable: LeagueRow[] }
 export interface TeamTitleSummary { teamId: string; titles: number }
+export interface DivisionMovementSummary {
+  sourceSeason: number;
+  sourceSeasonLabel: string;
+  promotedTeamIds: string[];
+  relegatedTeamIds: string[];
+}
 export interface RecordPage { category: RecordCategory; entries: RecordEntry[]; total: number; offset: number; limit: number }
 export interface SeasonArchivePage { entries: SeasonArchiveEntry[]; total: number; offset: number; limit: number }
 export interface ChampionHistoryPage { entries: ChampionEntry[]; total: number; offset: number; limit: number }
 export interface StrengthLayerData { base: number; noForm: number; current: number; mediumImpact: number; formImpact: number; latent: { base: number; medium: number; form: number; current: number } }
 export interface RatingDistribution { mean: number; sd: number; min: number; max: number; range: number }
-export interface SimulationSnapshot { season: number; completedSeasons: number; round: number; totalMatches: number; table: LeagueRow[]; recent: PlayedMatch[]; recentChampions: ChampionEntry[]; recordPreviews: Partial<Record<RecordCategory, RecordEntry[]>>; championshipLeaders: TeamTitleSummary[]; archiveSeasonCount: number; recordsVersion: number; strengths?: Record<string, number>; strengthLayers?: Record<string, StrengthLayerData>; strengthDiagnostics?: { base: RatingDistribution; medium: RatingDistribution; form: RatingDistribution; current: RatingDistribution } }
+export interface SimulationSnapshot {
+  season: number;
+  completedSeasons: number;
+  round: number;
+  totalMatches: number;
+  /** Current visible top-division roster after promotion and relegation. */
+  teams: Team[];
+  table: LeagueRow[];
+  recent: PlayedMatch[];
+  recentChampions: ChampionEntry[];
+  recordPreviews: Partial<Record<RecordCategory, RecordEntry[]>>;
+  championshipLeaders: TeamTitleSummary[];
+  qualifications?: Partial<Record<string, QualificationStatus>>;
+  /** Promotion and relegation that produced the current season's roster. */
+  previousSeasonMovements?: DivisionMovementSummary;
+  archiveSeasonCount: number;
+  recordsVersion: number;
+  strengths?: Record<string, number>;
+  strengthLayers?: Record<string, StrengthLayerData>;
+  strengthDiagnostics?: {
+    base: RatingDistribution;
+    medium: RatingDistribution;
+    form: RatingDistribution;
+    current: RatingDistribution;
+  };
+}

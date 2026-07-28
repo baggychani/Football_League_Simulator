@@ -2,6 +2,7 @@ import { writeSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { teams } from '../src/data/teams';
+import { activeLeague } from '../src/data/league-catalog/active';
 import { createDoubleRoundRobin } from '../src/domain/fixtures';
 import { calibrateRatings, teamsOutsideTolerance } from '../src/calibration/calibration-engine';
 import { initialRatings, normalizeMarketProbabilities } from '../src/calibration/market';
@@ -56,6 +57,11 @@ emit({
 });
 
 const report = await calibrateRatings(teams, fixtures, target, currentRatings, new IndependentPoissonModel(), {
+  leagueRules: {
+    points: activeLeague.competition.points,
+    tieBreakers: activeLeague.competition.tieBreakers,
+    decisivePlayoffs: activeLeague.competition.decisivePlayoffs,
+  },
   seasons,
   iterations,
   seed,
