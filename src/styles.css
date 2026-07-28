@@ -2213,30 +2213,42 @@ body{min-width:0}
 @container league-table (max-width:580px){
   .standings-head,
   .standings-row{
-    grid-template-columns:20px minmax(84px,1fr) 31px 28px 28px 28px 32px 32px 36px 38px;
-    gap:2px;
+    grid-template-columns:
+      22px
+      minmax(100px,clamp(110px,28cqi,150px))
+      repeat(8,minmax(32px,1fr));
+    gap:3px;
     padding:0 6px;
   }
   .standings-row .club{gap:6px}
+  .standings-row .qualification-badge{font-size:10px}
+}
+
+@container league-table (max-width:450px){
+  .standings-head,
+  .standings-row{
+    grid-template-columns:20px minmax(66px,90px) repeat(8,minmax(29px,1fr));
+    gap:2px;
+    padding:0 5px;
+  }
+  .standings-row .club{gap:5px}
   .standings-row .club-name-full{display:none}
   .standings-row .club-name-short{
     display:inline;
     font-weight:700;
     letter-spacing:.02em;
   }
-  .standings-row .qualification-badge{font-size:10px}
 }
 
-@container league-table (max-width:445px){
+@container league-table (max-width:390px){
   .standings-head,
   .standings-row{
-    grid-template-columns:19px minmax(72px,1fr) 29px 26px 26px 26px 30px 30px 33px 35px;
-    gap:2px;
-    padding:0 5px;
+    grid-template-columns:18px minmax(60px,76px) repeat(8,minmax(26px,1fr));
+    gap:1px;
+    padding:0 4px;
   }
   .standings-head{font-size:10px}
   .standings-row{font-size:12px}
-  .standings-row .club{gap:5px}
   .standings-row .club i{width:16px;height:16px}
   .standings-row .qualification-badge{font-size:9px}
 }
