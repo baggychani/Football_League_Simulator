@@ -59,7 +59,7 @@ function parseYesPrice(outcomePrices: string | undefined): number | null {
     const parsed = JSON.parse(outcomePrices) as unknown;
     if (!Array.isArray(parsed) || parsed.length === 0) return null;
     const yes = Number(parsed[0]);
-    return Number.isFinite(yes) && yes >= 0 ? yes : null;
+    return Number.isFinite(yes) && yes >= 0 && yes <= 1 ? yes : null;
   } catch {
     return null;
   }
@@ -82,6 +82,7 @@ export function pricesFromGammaEvent(event: GammaEvent): Omit<PolymarketFetchRes
       unmatchedPolymarket.push(title);
       continue;
     }
+    if (prices[teamId] !== undefined) throw new Error(`Duplicate Polymarket market for team: ${teamId}`);
     prices[teamId] = yes;
     matched.push(teamId);
   }
@@ -100,15 +101,43 @@ export function pricesFromGammaEvent(event: GammaEvent): Omit<PolymarketFetchRes
 export async function fetchPolymarketEplChampion(
   slug = EPL_CHAMPION_EVENT_SLUG,
   fetchImpl: typeof fetch = fetch,
+  timeoutMs = 10_000,
 ): Promise<PolymarketFetchResult> {
   const url = `${POLYMARKET_GAMMA_API}/events?slug=${encodeURIComponent(slug)}`;
-  const response = await fetchImpl(url, { headers: { Accept: 'application/json' } });
+  let response: Response | null = null;
+  let lastError: unknown = null;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      response = await fetchImpl(url, { headers: { Accept: 'application/json' }, signal: controller.signal });
+      break;
+    } catch (error) {
+      lastError = error;
+      if (attempt === 1) {
+        if (error instanceof DOMException && error.name === 'AbortError') throw new Error(`Polymarket API timed out after ${timeoutMs}ms.`);
+        throw error;
+      }
+      await new Promise(resolve => setTimeout(resolve, 250));
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  if (!response) throw lastError instanceof Error ? lastError : new Error('Polymarket API request failed.');
   if (!response.ok) throw new Error(`Polymarket API ${response.status}: ${response.statusText}`);
-  const payload = (await response.json()) as GammaEvent[];
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch {
+    throw new Error('Polymarket API returned invalid JSON.');
+  }
+  if (!Array.isArray(payload)) throw new Error('Polymarket API returned an invalid event list.');
   const event = payload[0];
-  if (!event) throw new Error(`Polymarket event not found: ${slug}`);
+  if (!event || typeof event !== 'object' || typeof (event as GammaEvent).slug !== 'string' || typeof (event as GammaEvent).title !== 'string' || !Array.isArray((event as GammaEvent).markets)) {
+    throw new Error(`Polymarket event not found or malformed: ${slug}`);
+  }
   return {
-    ...pricesFromGammaEvent(event),
+    ...pricesFromGammaEvent(event as GammaEvent),
     fetchedAt: new Date().toISOString(),
     source: url,
   };

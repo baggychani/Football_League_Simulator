@@ -5,7 +5,7 @@ An intentionally visual Premier League-style simulator. Pick a club and the app 
 ## Run
 
 ```bash
-npm install
+npm ci
 npm run dev
 npm run test
 npm run build

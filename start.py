@@ -8,6 +8,8 @@ import math
 import os
 import subprocess
 import threading
+import tempfile
+import uuid
 import webbrowser
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -20,6 +22,10 @@ RATINGS = DATA / "calibrated-ratings.json"
 MARKET = DATA / "default-market.json"
 META = DATA / "polymarket-meta.json"
 DEFAULT_PORT = 27183
+MAX_BODY_BYTES = 2 * 1024 * 1024
+LOCAL_API_HEADER = "X-Football-Local-Api"
+LOCAL_API_HEADER_VALUE = "1"
+WRITE_LOCK = threading.Lock()
 
 
 def stamped_ratings_name() -> str:
@@ -37,6 +43,7 @@ def run_market_update() -> dict:
         check=False,
         capture_output=True,
         text=True,
+        timeout=30,
     )
     if completed.returncode != 0:
         detail = (completed.stderr or completed.stdout or "market update failed").strip()
@@ -91,9 +98,40 @@ def validate_calibration(payload: object) -> dict:
     return payload
 
 
+def validate_meta(meta: object) -> dict:
+    if not isinstance(meta, dict):
+        raise ValueError("Expected meta object.")
+    for field in ("slug", "title", "fetchedAt", "source"):
+        if not isinstance(meta.get(field), str) or not meta[field]:
+            raise ValueError(f"meta.{field} must be a non-empty string.")
+    for field in ("matchedTeams", "unmatchedPolymarket", "missingTeams", "changedTeams"):
+        value = meta.get(field)
+        if not isinstance(value, list) or any(not isinstance(item, str) for item in value):
+            raise ValueError(f"meta.{field} must be an array of strings.")
+    return meta
+
+
+def atomic_write(path: Path, data: bytes) -> None:
+    temporary: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(dir=path.parent, prefix=f".{path.name}.{os.getpid()}.{uuid.uuid4().hex}.", suffix=".tmp", delete=False) as handle:
+            temporary = Path(handle.name)
+            handle.write(data)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+
+
 class SpaHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(DIST), **kwargs)
+
+    def setup(self):
+        super().setup()
+        self.connection.settimeout(30)
 
     def do_GET(self):
         path = urlparse(self.path).path
@@ -110,36 +148,39 @@ class SpaHandler(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         path = urlparse(self.path).path
-        length = int(self.headers.get("Content-Length", "0"))
-        body = self.rfile.read(length)
+        if self.headers.get(LOCAL_API_HEADER) != LOCAL_API_HEADER_VALUE:
+            self.send_json_error(403, "Missing local API header.")
+            return
+
+        if path != "/api/update-market":
+            try:
+                body = self.read_json_body()
+            except ValueError as error:
+                self.send_json_error(400, str(error))
+                return
 
         if path == "/api/update-market":
             try:
                 payload = json.dumps(run_market_update())
-            except Exception as error:
-                self.send_response(500)
-                self.send_header("Content-Type", "text/plain; charset=utf-8")
-                self.end_headers()
-                self.wfile.write(str(error).encode("utf-8"))
+            except subprocess.TimeoutExpired:
+                self.send_json_error(504, "Market update timed out.")
                 return
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.end_headers()
-            self.wfile.write(payload.encode("utf-8"))
+            except Exception as error:
+                self.send_json_error(502, str(error))
+                return
+            self.send_json(200, json.loads(payload))
             print("updated market from Polymarket")
             return
 
         if path == "/api/save-market":
             try:
-                payload = json.loads(body.decode("utf-8"))
-                market = validate_market(payload["market"])
-                meta = payload["meta"]
-                if not isinstance(market, dict) or not isinstance(meta, dict):
-                    raise ValueError("Expected market and meta objects.")
-                MARKET.write_text(json.dumps(market, indent=2) + "\n", encoding="utf-8")
-                META.write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
+                market = validate_market(body["market"])
+                meta = validate_meta(body["meta"])
                 total = sum(float(value) for value in market.values())
                 target = {team_id: float(value) / total for team_id, value in market.items()}
+                with WRITE_LOCK:
+                    atomic_write(MARKET, (json.dumps(market, indent=2) + "\n").encode("utf-8"))
+                    atomic_write(META, (json.dumps(meta, indent=2) + "\n").encode("utf-8"))
                 response = {
                     "ok": True,
                     "persisted": True,
@@ -149,16 +190,9 @@ class SpaHandler(SimpleHTTPRequestHandler):
                     "changedTeams": meta.get("changedTeams", []),
                 }
             except Exception as error:
-                self.send_response(400)
-                self.send_header("Content-Type", "text/plain; charset=utf-8")
-                self.end_headers()
-                self.wfile.write(str(error).encode("utf-8"))
+                self.send_json_error(400, str(error))
                 return
-            encoded = json.dumps(response).encode("utf-8")
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.end_headers()
-            self.wfile.write(encoded)
+            self.send_json(200, response)
             print("saved market snapshot from client")
             return
 
@@ -166,23 +200,49 @@ class SpaHandler(SimpleHTTPRequestHandler):
             self.send_error(404)
             return
         try:
-            validate_calibration(json.loads(body.decode("utf-8")))
-            RATINGS.write_bytes(body)
+            payload = validate_calibration(body)
+            encoded = (json.dumps(payload, indent=2) + "\n").encode("utf-8")
             stamped = DATA / stamped_ratings_name()
-            stamped.write_bytes(body)
+            with WRITE_LOCK:
+                atomic_write(RATINGS, encoded)
+                atomic_write(stamped, encoded)
         except Exception as error:
-            self.send_response(400)
-            self.send_header("Content-Type", "text/plain; charset=utf-8")
-            self.end_headers()
-            self.wfile.write(str(error).encode("utf-8"))
+            self.send_json_error(400, str(error))
             return
-        payload = json.dumps({"ok": True, "path": "src/data/calibrated-ratings.json", "stamped": f"src/data/{stamped.name}"})
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.end_headers()
-        self.wfile.write(payload.encode("utf-8"))
+        response = {"ok": True, "path": "src/data/calibrated-ratings.json", "stamped": f"src/data/{stamped.name}"}
+        self.send_json(200, response)
         print(f"saved {RATINGS}")
         print(f"saved {stamped}")
+
+    def read_json_body(self) -> object:
+        content_type = self.headers.get("Content-Type", "")
+        if content_type and not content_type.lower().startswith("application/json"):
+            raise ValueError("Content-Type must be application/json.")
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+        except ValueError as error:
+            raise ValueError("Invalid Content-Length.") from error
+        if length < 0 or length > MAX_BODY_BYTES:
+            raise ValueError(f"Request body exceeds {MAX_BODY_BYTES} bytes.")
+        try:
+            body = self.rfile.read(length)
+            return json.loads(body.decode("utf-8"))
+        except TimeoutError as error:
+            raise ValueError("Request body timed out.") from error
+        except (UnicodeDecodeError, json.JSONDecodeError) as error:
+            raise ValueError("Request body must be valid JSON.") from error
+
+    def send_json(self, status: int, payload: object) -> None:
+        encoded = json.dumps(payload).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Content-Length", str(len(encoded)))
+        self.end_headers()
+        self.wfile.write(encoded)
+
+    def send_json_error(self, status: int, message: str) -> None:
+        self.send_json(status, {"ok": False, "error": message})
 
 
 def main() -> None:

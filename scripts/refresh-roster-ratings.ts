@@ -1,10 +1,11 @@
-import { writeFileSync } from 'node:fs';
 import { createDoubleRoundRobin } from '../src/domain/fixtures';
 import { teams } from '../src/data/teams';
 import { normalizeMarketProbabilities, ratingsFromLogMarket } from '../src/calibration/market';
 import { scoreModelDiagnostics } from '../src/calibration/diagnostics';
 import { IndependentPoissonModel } from '../src/simulation/score-model';
 import market from '../src/data/default-market.json';
+import { fileURLToPath } from 'node:url';
+import { atomicWriteFile } from './local-api';
 
 const target = normalizeMarketProbabilities(market as Record<string, number>, teams);
 const model = new IndependentPoissonModel();
@@ -51,7 +52,10 @@ const payload = {
   note: '2026/27 roster: Coventry / Ipswich / Hull replace Burnley / West Ham / Wolves. Ratings are temporary seeds until full calibration.',
 };
 
-writeFileSync(new URL('../src/data/calibrated-ratings.json', import.meta.url), `${JSON.stringify(payload, null, 2)}\n`);
+await atomicWriteFile(
+  fileURLToPath(new URL('../src/data/calibrated-ratings.json', import.meta.url)),
+  `${JSON.stringify(payload, null, 2)}\n`,
+);
 console.log(`wrote calibrated-ratings.json scale=${bestScale}`);
 const check = scoreModelDiagnostics(teams, fixtures, ratings, model);
 console.log('nearSmoothCap', check?.nearSmoothCapFixtureRatio);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mergeMarketSnapshot, pricesFromGammaEvent } from '../calibration/polymarket';
+import { fetchPolymarketEplChampion, mergeMarketSnapshot, pricesFromGammaEvent } from '../calibration/polymarket';
 
 describe('polymarket', () => {
   it('maps active gamma markets to simulator team ids', () => {
@@ -35,5 +35,29 @@ describe('polymarket', () => {
     const merged = mergeMarketSnapshot({ arsenal: 0.37 }, { arsenal: 0.3, 'man-city': 0.29 });
     expect(merged.arsenal).toBe(0.37);
     expect(merged['man-city']).toBe(0.29);
+  });
+
+  it('does not accept out-of-range prices and rejects duplicate team markets', () => {
+    const invalid = pricesFromGammaEvent({
+      slug: 'test',
+      title: 'Test',
+      markets: [{ groupItemTitle: 'Arsenal', outcomePrices: '["1.2"]', active: true }],
+    });
+    expect(invalid.prices.arsenal).toBeUndefined();
+    expect(invalid.missingTeams).toContain('arsenal');
+
+    expect(() => pricesFromGammaEvent({
+      slug: 'test',
+      title: 'Test',
+      markets: [
+        { groupItemTitle: 'Arsenal', outcomePrices: '["0.3"]', active: true },
+        { groupItemTitle: 'Arsenal', outcomePrices: '["0.4"]', active: true },
+      ],
+    })).toThrow(/Duplicate/);
+  });
+
+  it('rejects malformed upstream responses', async () => {
+    const fetchImpl: typeof fetch = async () => new Response(JSON.stringify({ invalid: true }), { status: 200 });
+    await expect(fetchPolymarketEplChampion('test', fetchImpl, 10)).rejects.toThrow(/invalid event list/);
   });
 });

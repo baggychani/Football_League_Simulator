@@ -1,5 +1,5 @@
 import { writeSync } from 'node:fs';
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { teams } from '../src/data/teams';
 import { createDoubleRoundRobin } from '../src/domain/fixtures';
@@ -7,6 +7,7 @@ import { calibrateRatings, teamsOutsideTolerance } from '../src/calibration/cali
 import { initialRatings, normalizeMarketProbabilities } from '../src/calibration/market';
 import { calibrationPayload } from '../src/calibration/output';
 import { IndependentPoissonModel } from '../src/simulation/score-model';
+import { atomicWriteFile, stampedRatingsName, withWriteLock } from './local-api';
 
 function arg(name: string, fallback: string) {
   const value = process.argv.indexOf(name);
@@ -28,11 +29,6 @@ const headSeasons = Number(arg('--head-seasons', '100000'));
 const finalSeasons = Number(arg('--final-seasons', '200000'));
 const finalMaxSeasons = Number(arg('--final-max-seasons', '300000'));
 const startMode = arg('--start-mode', 'hybrid') as 'cold' | 'warm' | 'hybrid';
-
-function stampedRatingsName(date = new Date()) {
-  const stamp = date.toISOString().replace(/[:.]/g, '-').replace('T', '_').slice(0, 19);
-  return `calibrated-ratings_${stamp}.json`;
-}
 
 const raw = JSON.parse(await readFile(marketPath, 'utf8'));
 const target = normalizeMarketProbabilities(raw, teams);
@@ -128,10 +124,12 @@ const payload = calibrationPayload(report, raw, target, {
   trainingSeedBank: [1, 2, 3, 4, 5].map(value => seed + 1_000 + value),
   validationSeedBank: [1, 2, 3, 4, 5].map(value => seed + 9_000 + value),
 });
-await writeFile(outputPath, JSON.stringify(payload, null, 2));
-
 const stampedPath = resolve(outputPath, '..', stampedRatingsName());
-await writeFile(stampedPath, await readFile(outputPath, 'utf8'));
+const serializedPayload = `${JSON.stringify(payload, null, 2)}\n`;
+await withWriteLock(async () => {
+  await atomicWriteFile(outputPath, serializedPayload);
+  await atomicWriteFile(stampedPath, serializedPayload);
+});
 
 emit({
   type: 'final',

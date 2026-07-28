@@ -1,7 +1,7 @@
 {
   "slug": "epl-2027-champion-20260701200428749",
   "title": "EPL: 2027 Champion",
-  "fetchedAt": "2026-07-24T07:40:57.276Z",
+  "fetchedAt": "2026-07-28T02:17:57.274Z",
   "source": "https://gamma-api.polymarket.com/events?slug=epl-2027-champion-20260701200428749",
   "matchedTeams": [
     "arsenal",
@@ -27,5 +27,9 @@
   ],
   "unmatchedPolymarket": [],
   "missingTeams": [],
-  "changedTeams": []
+  "changedTeams": [
+    "arsenal",
+    "newcastle",
+    "tottenham"
+  ]
 }

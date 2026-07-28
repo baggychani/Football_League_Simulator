@@ -1,5 +1,5 @@
 {
-  "arsenal": 0.355,
+  "arsenal": 0.365,
   "aston-villa": 0.0165,
   "bournemouth": 0.0015,
   "brentford": 0.0015,
@@ -15,8 +15,8 @@
   "liverpool": 0.115,
   "man-city": 0.295,
   "man-united": 0.115,
-  "newcastle": 0.0055,
+  "newcastle": 0.0045,
   "nottingham-forest": 0.0015,
   "sunderland": 0.0015,
-  "tottenham": 0.0275
+  "tottenham": 0.0295
 }

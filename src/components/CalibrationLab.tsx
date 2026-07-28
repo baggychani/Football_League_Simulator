@@ -22,6 +22,8 @@ import rawMarket from '../data/default-market.json';
 import polymarketMeta from '../data/polymarket-meta.json';
 import { teams } from '../data/teams';
 
+const LOCAL_API_HEADERS = { 'Content-Type': 'application/json', 'X-Football-Local-Api': '1' };
+
 type MarketMeta = {
   slug: string;
   title: string;
@@ -374,7 +376,7 @@ export function CalibrationLab({
     try {
       const response = await fetch('/api/save-market', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: LOCAL_API_HEADERS,
         body: JSON.stringify({ market: merged, meta }),
       });
       if (response.ok) {
@@ -400,7 +402,7 @@ export function CalibrationLab({
     setMarketBusy(true);
     setMarketStatus('Polymarket에서 불러오는 중…');
     try {
-      const response = await fetch('/api/update-market', { method: 'POST' });
+      const response = await fetch('/api/update-market', { method: 'POST', headers: { 'X-Football-Local-Api': '1' } });
       if (response.ok) {
         const payload = (await response.json()) as MarketUpdateResponse;
         applyMarketUpdate(payload);
@@ -457,7 +459,7 @@ export function CalibrationLab({
       try {
         const response = await fetch('/api/save-calibration', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: LOCAL_API_HEADERS,
           body: JSON.stringify(payload),
         });
         if (!response.ok) throw new Error(await response.text());
